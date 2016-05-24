@@ -16,7 +16,7 @@
 
 package org.trustedanalytics.servicebroker.gearpump.service.prerequisities;
 
-public class PrerequisitesException extends Exception {
+public class PrerequisitesException extends RuntimeException {
 
 
     private static final long serialVersionUID = 1L;

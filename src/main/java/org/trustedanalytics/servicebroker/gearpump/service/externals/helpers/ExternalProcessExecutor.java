@@ -49,6 +49,14 @@ public class ExternalProcessExecutor {
         }
     }
 
+    private void waitForProcess(Process process, String lineToRun) {
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            LOGGER.error("Command '" + lineToRun + "' interrupted.", e);
+        }
+    }
+    
     public ExternalProcessExecutorResult run(String[] command, String workingDir, Map<String, String> properties) {
 
         String lineToRun = Arrays.asList(command).stream().collect(Collectors.joining(" "));
@@ -79,11 +87,7 @@ public class ExternalProcessExecutor {
                 processOutput.append('\n');
             }
 
-            try {
-                process.waitFor();
-            } catch (InterruptedException e) {
-                LOGGER.error("Command '" + lineToRun + "' interrupted.", e);
-            }
+            waitForProcess(process, lineToRun);
         } catch (IOException e) {
             LOGGER.error("Problem executing external process.", e);
             return new ExternalProcessExecutorResult(Integer.MIN_VALUE, "", e);

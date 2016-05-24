@@ -67,6 +67,7 @@ public class GearPumpDriverExec {
         try {
             return resourceManagerService.getRealPath(externalConfiguration.getGearPumpDestinationFolder());
         } catch (IOException e) {
+            LOGGER.debug("Swallowing exception while getting destDir.", e);
             return null;
         }
     }

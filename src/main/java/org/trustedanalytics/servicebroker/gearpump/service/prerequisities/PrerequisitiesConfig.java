@@ -32,12 +32,7 @@ public class PrerequisitiesConfig implements ApplicationListener<ContextRefreshe
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        LOGGER.info("contextRefreshedEvent = [" + contextRefreshedEvent + "]");
-        try {
-            prerequisitesChecker.ensurePrerequisities();
-        } catch (PrerequisitesException e) {
-            throw new RuntimeException("Cannot prepare the broker to work.", e);
-        }
+        LOGGER.info("contextRefreshedEvent = [ {} ]", contextRefreshedEvent);
+        prerequisitesChecker.ensurePrerequisities();
     }
-
 }
