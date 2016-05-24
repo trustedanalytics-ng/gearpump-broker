@@ -46,12 +46,14 @@ public class YarnAppManager {
      * @throws YarnException
      */
     public void killApplication(String applicationId) throws YarnException {
-        try (YarnClient yarnClient = getYarnClient()) {
-            yarnClient.killApplication(getApplicationId(applicationId));
-        } catch (ApplicationNotFoundException anfe) {
-            LOGGER.warn(String.format("Haven't found application %s. Assuming it was removed manually.", applicationId), anfe);
-        } catch (IOException e) {
-            throw new YarnException("YARN error during application removal.", e);
+        if (applicationId != null) {
+            try (YarnClient yarnClient = getYarnClient()) {
+                yarnClient.killApplication(getApplicationId(applicationId));
+            } catch (ApplicationNotFoundException anfe) {
+                LOGGER.warn(String.format("Haven't found application %s. Assuming it was removed manually.", applicationId), anfe);
+            } catch (IOException e) {
+                throw new YarnException("YARN error during application removal.", e);
+            }
         }
     }
 
