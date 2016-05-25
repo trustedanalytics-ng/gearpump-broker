@@ -32,7 +32,7 @@ import java.io.IOException;
 
 public class GearPumpServiceInstanceService extends ForwardingServiceInstanceServiceStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(GearPumpServiceInstanceService.class);
-    public static final String COULDN_T_SPAWN_GEAR_PUMP_INSTANCE = "Couldn't spawn GearPump instance";
+    public static final String COULD_NOT_SPAWN_GEARPUMP_INSTANCE = "Couldn't spawn GearPump instance";
 
     @Autowired
     private GearPumpSpawner gearPumpSpawner;
@@ -59,12 +59,12 @@ public class GearPumpServiceInstanceService extends ForwardingServiceInstanceSer
             gearPumpCredentials = gearPumpSpawner.provisionInstance(instanceId, spaceId, orgId, planId);
             LOGGER.info("GearPump instance has been spawned");
         } catch (Exception e) {
-            LOGGER.error(COULDN_T_SPAWN_GEAR_PUMP_INSTANCE, e);
-            throw prepareSBException(COULDN_T_SPAWN_GEAR_PUMP_INSTANCE, e);
+            LOGGER.error(COULD_NOT_SPAWN_GEARPUMP_INSTANCE, e);
+            throw prepareSBException(COULD_NOT_SPAWN_GEARPUMP_INSTANCE, e);
         }
 
         if (gearPumpCredentials == null) {
-            LOGGER.error(COULDN_T_SPAWN_GEAR_PUMP_INSTANCE);
+            LOGGER.error(COULD_NOT_SPAWN_GEARPUMP_INSTANCE);
             throw new ServiceBrokerException("Couldn't spawn GearPump instance (null credentials).");
         }
 

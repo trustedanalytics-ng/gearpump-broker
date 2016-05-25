@@ -29,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplate;
 import org.trustedanalytics.servicebroker.gearpump.config.CfCallerConfiguration;
@@ -127,11 +126,11 @@ public class CloudFoundryService {
             try {
                 uiOrgGuid = cfCaller.getValueFromJson(response.getBody(), RESOURCES_0_METADATA_GUID);
             } catch (IOException e) {
-                throw new DashboardServiceException("Cannot obtain org GUID (check GEARPUMP_UI_ORG variable).", e);
+                throw DashboardServiceException.getCannotObtainException("org GUID", "GEARPUMP_UI_ORG", e);
             }
             LOGGER.debug("UI Org GUID '{}'", uiOrgGuid);
             if (StringUtils.isEmpty(uiOrgGuid)) {
-                throw new DashboardServiceException("Cannot obtain org GUID (check GEARPUMP_UI_ORG variable).");
+                throw DashboardServiceException.getCannotObtainException("org GUID", "GEARPUMP_UI_ORG");
             }
         }
         return uiOrgGuid;
@@ -145,11 +144,11 @@ public class CloudFoundryService {
             try {
                 uiSpaceGuid = cfCaller.getValueFromJson(response.getBody(), RESOURCES_0_METADATA_GUID);
             } catch (IOException e) {
-                throw new DashboardServiceException("Cannot obtain space GUID (check GEARPUMP_UI_SPACE variable).", e);
+                throw DashboardServiceException.getCannotObtainException("space GUID", "GEARPUMP_UI_SPACE", e);
             }
             LOGGER.debug("UI Space GUID '{}'", uiSpaceGuid);
             if (StringUtils.isEmpty(uiSpaceGuid)) {
-                throw new DashboardServiceException("Cannot obtain space GUID (check GEARPUMP_UI_SPACE variable).");
+                throw DashboardServiceException.getCannotObtainException("space GUID", "GEARPUMP_UI_SPACE");
             }
         }
         return uiSpaceGuid;
@@ -163,11 +162,11 @@ public class CloudFoundryService {
             try {
                 uiServiceGuid = cfCaller.getValueFromJson(response.getBody(), RESOURCES_0_METADATA_GUID);
             } catch (IOException e) {
-                throw new DashboardServiceException("Cannot obtain dashboard service GUID (check GEARPUMP_UI_NAME variable).", e);
+                throw DashboardServiceException.getCannotObtainException("service GUID", "GEARPUMP_UI_NAME", e);
             }
             LOGGER.debug("UI Service GUID '{}'", uiServiceGuid);
             if (StringUtils.isEmpty(uiServiceGuid)) {
-                throw new DashboardServiceException("Cannot obtain dashboard service GUID (check GEARPUMP_UI_NAME variable).");
+                throw DashboardServiceException.getCannotObtainException("service GUID", "GEARPUMP_UI_NAME");
             }
         }
         return uiServiceGuid;
@@ -191,12 +190,11 @@ public class CloudFoundryService {
         return uiServicePlanGuid;
     }
 
-    private ResponseEntity<String> execute(String url, HttpMethod method, String body, Object... urlVariables) throws RestClientException {
+    private ResponseEntity<String> execute(String url, HttpMethod method, String body, Object... urlVariables) {
         return this.executeWithHeaders(url, method, body, new HttpHeaders(), urlVariables);
     }
 
-    private ResponseEntity<String> executeWithHeaders(String url, HttpMethod method, String body, HttpHeaders headers, Object... urlVariables)
-            throws RestClientException {
+    private ResponseEntity<String> executeWithHeaders(String url, HttpMethod method, String body, HttpHeaders headers, Object... urlVariables) {
         RestTemplate restTemplate = cfCaller.createRestTemplate();
         HttpEntity<String> request = cfCaller.createJsonRequest(body, headers);
         URI expanded = (new UriTemplate(url)).expand(urlVariables);
@@ -227,7 +225,7 @@ public class CloudFoundryService {
     }
 
     private void updateUIApp(String orgId, String username, String uiCallback, String uiAppGuid,
-                                    String password, String gearpumpMaster, String uaaClientName) throws IOException {
+                                    String password, String gearpumpMaster, String uaaClientName) {
         LOGGER.info("Updating App Environments Instance");
         String body = String.format(UPDATE_APP_ENV_BODY_TEMPLATE, username,
                 password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId, uiCallback);

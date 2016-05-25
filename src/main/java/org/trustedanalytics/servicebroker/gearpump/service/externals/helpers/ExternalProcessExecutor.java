@@ -56,7 +56,7 @@ public class ExternalProcessExecutor {
             LOGGER.error("Command '" + lineToRun + "' interrupted.", e);
         }
     }
-    
+
     public ExternalProcessExecutorResult run(String[] command, String workingDir, Map<String, String> properties) {
 
         String lineToRun = Arrays.asList(command).stream().collect(Collectors.joining(" "));

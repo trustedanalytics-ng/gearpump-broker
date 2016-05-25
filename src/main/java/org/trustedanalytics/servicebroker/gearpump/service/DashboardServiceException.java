@@ -17,6 +17,7 @@
 package org.trustedanalytics.servicebroker.gearpump.service;
 
 public class DashboardServiceException extends Exception {
+
     public DashboardServiceException() {
         super();
     }
@@ -27,5 +28,17 @@ public class DashboardServiceException extends Exception {
 
     public DashboardServiceException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    private static String getCannotObtainMessage(String param, String variable) {
+        return String.format("Cannot obtain %s (check %s variable).", param, variable);
+    }
+
+    public static DashboardServiceException getCannotObtainException(String param, String variable) {
+        return new DashboardServiceException(getCannotObtainMessage(param, variable));
+    }
+
+    public static DashboardServiceException getCannotObtainException(String param, String variable, Exception e) {
+        return new DashboardServiceException(getCannotObtainMessage(param, variable), e);
     }
 }

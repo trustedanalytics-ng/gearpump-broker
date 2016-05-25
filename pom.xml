@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gearpump-broker</artifactId>
 
-    <version>0.6.16</version>
+    <version>0.6.17</version>
 
     <parent>
         <groupId>org.trustedanalytics</groupId>
