@@ -204,7 +204,7 @@ public class CloudFoundryService {
         return response;
     }
 
-    private String createUIInstance(String uiInstanceName, String spaceId, String orgId, String uiServicePlanGuid, String username,
+    private String createUIInstance(String uiInstanceName, String spaceId, String orgId, String username,
                                     String password, String gearpumpMaster, String uaaClientName) throws IOException {
         LOGGER.info("Creating Service Instance");
         String body = String.format(CREATE_SERVICE_BODY_TEMPLATE, uiInstanceName, spaceId, uiServicePlanGuid, uiInstanceName,
@@ -339,7 +339,7 @@ public class CloudFoundryService {
         String uiServiceInstanceGuid;
         String uiAppUrl;
         try {
-            uiServiceInstanceGuid = createUIInstance(uiInstanceName, spaceId, orgId, uiServicePlanGuid, username, password, gearpumpMaster, uaaClientName);
+            uiServiceInstanceGuid = createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
             uiAppUrl = getUIAppUrl(uiServiceInstanceGuid);
         } catch (IOException e) {
             throw new CloudFoundryServiceException("Cannot create UI instance.", e);

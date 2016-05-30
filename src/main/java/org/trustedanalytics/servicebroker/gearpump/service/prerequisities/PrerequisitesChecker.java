@@ -67,12 +67,28 @@ public class PrerequisitesChecker {
      * <li>the archive is unpacked</li>
      * <li>the archive is stored on hdfs</li>
      */
-    public void ensurePrerequisities() throws PrerequisitesException {
+    public void ensurePrerequisities() {
         LOGGER.info("ensure prerequisities invoked");
 
         String gearPumpPackName = externalConfiguration.getGearPumpPackName();
         String archiveLocalPath = String.format("gearpump/%s", gearPumpPackName);
+
         // 1. check if the archive exists
+        checkIfTheArchiveExists(archiveLocalPath, gearPumpPackName);
+
+        // 2. check if unpacked version exists
+        checkIfUnpackedVersionExists(archiveLocalPath);
+
+        // 3. check if hdfs directory exists
+        checkIfHdfsDirExists();
+
+        //4. check if the pack is in hdfs
+        checkPresenceOfPackOnHdfs(archiveLocalPath);
+    }
+
+
+
+    private void checkIfTheArchiveExists(String archiveLocalPath, String gearPumpPackName) {
         LOGGER.info("Checking if archive {} exists. ", archiveLocalPath);
         boolean archivePresent = resourceManagerService.checkIfExists(archiveLocalPath);
         if (!archivePresent) {
@@ -82,8 +98,9 @@ public class PrerequisitesChecker {
             throw new PrerequisitesException("Downloading archive not yet implemented.");
         }
         LOGGER.info("GearPump archive {} is present. ", gearPumpPackName);
+    }
 
-        // 2. check if unpacked version exists
+    private void checkIfUnpackedVersionExists(String archiveLocalPath) {
         boolean archiveUnpacked = resourceManagerService.checkIfExists(externalConfiguration.getGearPumpDestinationFolder());
 
         LOGGER.info("Checking if the archive was unpacked");
@@ -119,8 +136,9 @@ public class PrerequisitesChecker {
             LOGGER.error("Error copying yarn config files.", e);
             throw new PrerequisitesException("Error copying yarn config files.", e);
         }
+    }
 
-        // 3. check if hdfs directory exists
+    private void checkIfHdfsDirExists() {
         String hdfsDirectory = externalConfiguration.getHdfsDir();
         LOGGER.info("Check if HDFS directory for GearPump archive exists.");
         boolean hdfsDirExists;
@@ -143,8 +161,9 @@ public class PrerequisitesChecker {
             }
         }
         LOGGER.info("HDFS directory for GearPump archive exists.");
+    }
 
-        //4. check if the pack is in hdfs
+    private void checkPresenceOfPackOnHdfs(String archiveLocalPath) {
         String hdfsFilePath = externalConfiguration.getHdfsGearPumpPackPath();
         LOGGER.info("Checking if the archive ({}) is stored in hdfs", hdfsFilePath);
         boolean hdfsFileExists;
@@ -168,8 +187,6 @@ public class PrerequisitesChecker {
         }
         LOGGER.info("Archive IS stored in hdfs");
     }
-
-
 
     private void setBinariesExecutable() throws ExternalProcessException {
         String[] command = new String[]{"chmod", "-R", "+x", "bin"};
