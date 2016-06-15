@@ -9,7 +9,7 @@ applications:
   services:
   - sso
   - zookeeper-gearpump
-  - kerberos-service
+  - kerberos-gearpump
   - hdfs-gearpump
   - yarn-gearpump
   env:

@@ -32,7 +32,7 @@ public class YarnConfig {
     public Configuration yarnConfiguration() throws IOException, LoginException {
         AppConfiguration helper = Configurations.newInstanceFromEnv();
         ServiceInstanceConfiguration yarnConf = helper.getServiceConfig(ServiceType.YARN_TYPE);
-        ServiceInstanceConfiguration krbConf = helper.getServiceConfig("kerberos-service");
+        ServiceInstanceConfiguration krbConf = helper.getServiceConfig(ServiceType.KERBEROS_TYPE);
 
         Configuration hadoopConf = yarnConf.asHadoopConfiguration() ;
 

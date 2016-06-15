@@ -29,9 +29,7 @@ import org.trustedanalytics.cfbroker.store.serialization.RepositorySerializer;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClientBuilder;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperStore;
-import org.trustedanalytics.hadoop.config.ConfigurationHelper;
-import org.trustedanalytics.hadoop.config.ConfigurationHelperImpl;
-import org.trustedanalytics.hadoop.config.PropertyLocator;
+import org.trustedanalytics.hadoop.config.client.*;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
 
 import java.io.IOException;
@@ -41,8 +39,6 @@ public class BrokerStoreConfig {
 
     @Autowired
     private KerberosProperties kerberosProperties;
-
-    private ConfigurationHelper confHelper;
 
     private FactoryHelper helper;
 
@@ -64,12 +60,10 @@ public class BrokerStoreConfig {
 
     public BrokerStoreConfig() {
         this.helper = new FactoryHelper();
-        this.confHelper = ConfigurationHelperImpl.getInstance();
     }
 
     BrokerStoreConfig(FactoryHelper helper) {
         this.helper = helper;
-        this.confHelper = ConfigurationHelperImpl.getInstance();
     }
 
     @Bean
@@ -87,19 +81,16 @@ public class BrokerStoreConfig {
     @Bean
     @Profile("cloud")
     public ZookeeperClient getZKClient() throws IOException {
+        AppConfiguration appHelper = Configurations.newInstanceFromEnv();
+        ServiceInstanceConfiguration zooConf = appHelper.getServiceConfig(ServiceType.ZOOKEEPER_TYPE);
+
         ZookeeperClient zkClient = helper.getZkClientInstance(
-            getPropertyFromCredentials(PropertyLocator.ZOOKEPER_URI),
+            zooConf.getProperty(Property.ZOOKEPER_URI).get(),
             kerberosProperties.getUser(),
             kerberosProperties.getPassword(),
-            getPropertyFromCredentials(PropertyLocator.ZOOKEPER_ZNODE));
+            zooConf.getProperty(Property.ZOOKEPER_ZNODE).get());
         zkClient.init();
         return zkClient;
-    }
-
-    private String getPropertyFromCredentials(PropertyLocator property) throws IOException {
-        return confHelper.getPropertyFromEnv(property)
-            .orElseThrow(
-                () -> new IllegalStateException(property.name() + " not found in VCAP_SERVICES"));
     }
 
     static final class FactoryHelper {

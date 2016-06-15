@@ -30,15 +30,23 @@ Broker configuration params list (environment properties):
   * CF_CATALOG_SERVICENAME - service name in cloud foundry catalog (default: gearpump)
   * CF_CATALOG_SERVICEID - service id in cloud foundry catalog (default: gearpump)
   * GEARPUMP_UI_ORG, GEARPUMP_UI_SPACE, GEARPUMP_UI_NAME - org, space and name of Apache Gearpump's dashboard to be used by application broker (make sure, that there’s application-broker up and running, and dashboard service available)
-  * GEARPUMP_PACK_VERSION - the version of Apache Gearpump binaries to be used in the broker (define the version by following the pattern: if the binary is called ``gearpump-2.11-0.7.4.zip``, the version is: ``GEARPUMP_PACK_VERSION: "2.11-0.7.4"``)
+  * GEARPUMP_PACK_VERSION - the version of Apache Gearpump binaries to be used in the broker (define the version by following the pattern: if the binary is called ``gearpump-2.11-0.8.0.zip``, the version is: ``GEARPUMP_PACK_VERSION: "2.11-0.8.0"``)
 
 ### Services
-The broker uses some the following TAP services;
-* sso - to obtain credentials (for connecting to Application Broker)
+The broker uses some the following TAP services;  
+
+* sso  (user-provided-service) - to obtain credentials (for connecting to Application Broker)
 * zookeeper - to store instance information
-* kerberos (user-provided-service) - to be able to log in to kerberos (it will provide default kerberos configuration, for REALM and KDC host)
+* kerberos - to be able to log in to kerberos (it will provide kerberos configuration, for REALM and KDC host)
 * hdfs - to upload Apache Gearpump binary to HDFS
-* yarn - to obtain YARN configuration
+* yarn - to obtain YARN configuration  
+```
+Example CF CLI commands:     
+ cf cs zookeeper shared zookeeper-gearpump  
+ cf cs kerberos shared kerberos-service  
+ cf cs hdfs shared hdfs-gearpump  
+ cf cs yarn bare yarn-gearpump  
+```
 
 Check, if there are instances of the services above in your organization. If not, create them.
 
