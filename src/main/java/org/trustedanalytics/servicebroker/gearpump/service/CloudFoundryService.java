@@ -36,7 +36,9 @@ import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfC
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,33 +78,19 @@ public class CloudFoundryService {
     private static final String METADATA_GUID = "/metadata/guid";
     private static final String UAA_ACCESS_TOKEN = "/access_token";
     private static final String UAA_TOKEN_TYPE = "/token_type";
-    private static final String APP_URL = "/entity/credentials/url";
-    private static final String APP_STATUS = "/0/state";
-    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"space_guid\":\"%s\",\"service_plan_guid\":\"%s\",\"parameters\":{\"push_argument\":\"--no-start\",\"name\":\"%s\",\"USERNAME\":\"%s\",\"PASSWORD\":\"%s\",\"GEARPUMP_MASTER\":\"%s\",\"UAA_CLIENT_ID\":\"%s\",\"UAA_CLIENT_SECRET\":\"%s\",\"UAA_HOST\":\"%s\",\"CF_API_ENDPOINT\":\"%s\",\"ORG_ID\":\"%s\"}}";
-    private static final String UPDATE_APP_ENV_BODY_TEMPLATE = "{\"environment_json\":{\"USERNAME\":\"%s\",\"PASSWORD\":\"%s\",\"GEARPUMP_MASTER\":\"%s\",\"UAA_CLIENT_ID\":\"%s\",\"UAA_CLIENT_SECRET\":\"%s\",\"UAA_HOST\":\"%s\",\"CF_API_ENDPOINT\":\"%s\",\"ORG_ID\":\"%s\",\"CALLBACK\":\"%s\"}}";
-    private static final String CREATE_SERVICE_KEY_BODY_TEMPLATE = "{\"service_instance_guid\":\"%s\",\"name\":\"temp_param\"}";
+    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"space_guid\":\"%s\",\"service_plan_guid\":\"%s\",\"parameters\":{\"no-application-name-change\":\"true\",\"push_argument\":\"--no-start\",\"name\":\"%s\",\"USERNAME\":\"%s\",\"PASSWORD\":\"%s\",\"GEARPUMP_MASTER\":\"%s\",\"UAA_CLIENT_ID\":\"%s\",\"UAA_CLIENT_SECRET\":\"%s\",\"UAA_HOST\":\"%s\",\"CF_API_ENDPOINT\":\"%s\",\"ORG_ID\":\"%s\",\"CALLBACK\":\"%s\"}}";
     private static final String CREATE_UAA_TOKEN_BODY_TEMPLATE = "grant_type=client_credentials&response_type=token";
     private static final String CREATE_UAA_CLIENT_BODY_TEMPLATE = "{\"client_id\":\"%s\",\"name\":\"%s\",\"client_secret\":\"%s\",\"scope\":[\"cloud_controller.read\",\"openid\"],\"resource_ids\":[\"none\"],\"authorities\":[\"cloud_controller.read\",\"cloud_controller.write\",\"openid\"],\"authorized_grant_types\":[\"client_credentials\",\"authorization_code\",\"refresh_token\"],\"autoapprove\":true,\"access_token_validity\":43200,\"redirect_uri\":[\"%s\"]}";
-    private static final String STATUS_STOPPED_BODY = "{\"state\":\"STOPPED\"}";
-    private static final String STATUS_STARTED_BODY = "{\"state\":\"STARTED\"}";
     private static final String GET_ORG_GUID_URL = "{apiUrl}/v2/organizations?q=name:{orgName}";
     private static final String GET_SPACE_GUID_URL = "{apiUrl}/v2/organizations/{orgId}/spaces?q=name:{spaceName}";
     private static final String GET_SERVICE_GUID_URL = "{apiUrl}/v2/spaces/{spaceId}/services?q=label:{applicationName}";
     private static final String GET_SERVICE_PLAN_GUID_URL = "{apiUrl}/v2/service_plans?q=service_guid:{serviceGuid}";
     private static final String CREATE_SERVICE_INSTANCE_URL = "{apiUrl}/v2/service_instances";
-    private static final String GET_APP_GUID_URL = "{apiUrl}/v2/spaces/{spaceGuid}/apps?q=name:{appName}";
-    private static final String UPDATE_APP_URL = "{apiUrl}/v2/apps/{appGuid}";
-    private static final String GET_STATUS_APP_URL = "{apiUrl}/v2/apps/{appGuid}/stats";
-    private static final String POST_CREATE_SERVICE_KEY_URL = "{apiUrl}/v2/service_keys";
-    private static final String DELETE_SERVICE_KEY_URL = "{apiUrl}/v2/service_keys/{serviceKeyGuid}";
     private static final String DELETE_SERVICE_URL = "{apiUrl}/v2/service_instances/{serviceId}";
     private static final String CREATE_UAA_TOKEN_URL = "{uaaTokenUrl}";
     private static final String CREATE_UAA_CLIENT_URL = "{uaaUrl}/oauth/clients";
     private static final String DELETE_UAA_CLIENT_URL = "{uaaUrl}/oauth/clients/{client_id}";
     private static final String REDIRECT_URI_SUFIX = "/login/oauth2/cloudfoundryuaa/callback";
-
-    private static final String UI_OK_STATUS = "RUNNING";
-    private static final int UI_MAX_STATUS_CHECK = 50;
 
     private static String uiOrgGuid;
     private static String uiSpaceGuid;
@@ -205,10 +193,10 @@ public class CloudFoundryService {
     }
 
     private String createUIInstance(String uiInstanceName, String spaceId, String orgId, String username,
-                                    String password, String gearpumpMaster, String uaaClientName) throws IOException {
+                                    String password, String gearpumpMaster, String uaaClientName, String Callback) throws IOException {
         LOGGER.info("Creating Service Instance");
         String body = String.format(CREATE_SERVICE_BODY_TEMPLATE, uiInstanceName, spaceId, uiServicePlanGuid, uiInstanceName,
-                username, password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId);
+                username, password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId, Callback);
         LOGGER.debug("Create app body: {}", body);
         ResponseEntity<String> response = execute(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, cfApiEndpoint);
         String uiServiceInstanceGuid = cfCaller.getValueFromJson(response.getBody(), METADATA_GUID);
@@ -216,55 +204,27 @@ public class CloudFoundryService {
         return uiServiceInstanceGuid;
     }
 
-    private String getUIAppGuid(String uiAppName, String spaceId) throws IOException {
-        LOGGER.info("Getting App guid");
-        ResponseEntity<String> response = execute(GET_APP_GUID_URL, HttpMethod.GET, "", cfApiEndpoint, spaceId, uiAppName);
-        String uiAppGuid = cfCaller.getValueFromJson(response.getBody(), RESOURCES_0_METADATA_GUID);
-        LOGGER.debug("App guid is: {}", uiAppGuid);
-        return uiAppGuid;
-    }
-
-    private void updateUIApp(String orgId, String username, String uiCallback, String uiAppGuid,
-                                    String password, String gearpumpMaster, String uaaClientName) {
-        LOGGER.info("Updating App Environments Instance");
-        String body = String.format(UPDATE_APP_ENV_BODY_TEMPLATE, username,
-                password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId, uiCallback);
-        LOGGER.debug("Update app body: {}", body);
-        execute(UPDATE_APP_URL, HttpMethod.PUT, body, cfApiEndpoint, uiAppGuid);
-    }
-
-    private void restartUIApp(String uiAppGuid) throws IOException {
-        LOGGER.info("Stopping ui app");
-        execute(UPDATE_APP_URL, HttpMethod.PUT, STATUS_STOPPED_BODY, cfApiEndpoint, uiAppGuid);
-        LOGGER.info("Starting ui app");
-        execute(UPDATE_APP_URL, HttpMethod.PUT, STATUS_STARTED_BODY, cfApiEndpoint, uiAppGuid);
-        LOGGER.info("Waiting ui to start");
-
-        String status = "";
-        int statusCheckNr = 0;
-        ResponseEntity<String> response;
-        while(!status.equals(UI_OK_STATUS) && statusCheckNr < UI_MAX_STATUS_CHECK){
-            response = execute(GET_STATUS_APP_URL, HttpMethod.GET, null, cfApiEndpoint, uiAppGuid);
-            status = cfCaller.getValueFromJson(response.getBody(), APP_STATUS);
-            LOGGER.debug("UI app status check nr {}: {}", statusCheckNr, status);
-            statusCheckNr++;
+    private String extractDomain() throws DashboardServiceException {
+        String domain;
+        try {
+            URL url = new URL(cfApiEndpoint);
+            domain = url.getHost();
+            LOGGER.debug("Extracted domain: {}", domain);
+            domain = domain.replaceFirst("([a-zA-Z0-9-]*\\.)", "");
+            LOGGER.debug("Trimmed domain: {}", domain);
+        } catch (MalformedURLException e) {
+            domain = "";
         }
+
+        if(domain.isEmpty()) {
+            throw new DashboardServiceException("Cannot extract domain.");
+        }
+
+        return domain;
     }
 
     public String loginHost() {
         return loginApiEndpoint.replaceAll("/oauth/authorize", "");
-    }
-
-    private String getUIAppUrl(String uiServiceInstanceGuid) throws IOException {
-        LOGGER.info("Getting UI App URL using create service key function");
-        String body = String.format(CREATE_SERVICE_KEY_BODY_TEMPLATE, uiServiceInstanceGuid);
-        ResponseEntity<String> response = execute(POST_CREATE_SERVICE_KEY_URL, HttpMethod.POST, body, cfApiEndpoint);
-        String uiAppUrl = cfCaller.getValueFromJson(response.getBody(), APP_URL);
-        String serviceKeyGuid = cfCaller.getValueFromJson(response.getBody(), METADATA_GUID);
-        LOGGER.info("Deleting service key");
-        execute(DELETE_SERVICE_KEY_URL, HttpMethod.DELETE, "", cfApiEndpoint, serviceKeyGuid);
-        LOGGER.debug("UI App url '{}'", uiAppUrl);
-        return uiAppUrl;
     }
 
     public void deleteUIServiceInstance(String uiServiceGuid) {
@@ -337,24 +297,16 @@ public class CloudFoundryService {
                                         String spaceId, String orgId, String uaaClientName)
             throws DashboardServiceException, CloudFoundryServiceException {
         String uiServiceInstanceGuid;
-        String uiAppUrl;
-        try {
-            uiServiceInstanceGuid = createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
-            uiAppUrl = getUIAppUrl(uiServiceInstanceGuid);
-        } catch (IOException e) {
-            throw new CloudFoundryServiceException("Cannot create UI instance.", e);
-        }
-
-        try {
-            String uiAppGuid = getUIAppGuid(uiAppUrl.replaceAll("\\.(.*)", ""), spaceId);
-            updateUIApp(orgId, username, uiAppUrl, uiAppGuid, password, gearpumpMaster, uaaClientName);
-            restartUIApp(uiAppGuid);
-        } catch (IOException e) {
-            throw new CloudFoundryServiceException("Cannot set environments and restart UI instance", e);
-        }
+        String uiAppUrl = uiInstanceName + "." + extractDomain();
 
         String uaaToken = createUaaToken(ssoAdminClientId, ssoAdminClientSecret);
         createUaaClient(uaaClientName, uaaClientName, password, uiAppUrl, uaaToken);
+
+        try {
+            uiServiceInstanceGuid = createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName, uiAppUrl);
+        } catch (IOException e) {
+            throw new CloudFoundryServiceException("Cannot create UI instance.", e);
+        }
 
         Map<String, String> dashboardData = new HashMap<>();
         dashboardData.put("uiServiceInstanceGuid", uiServiceInstanceGuid);
