@@ -19,6 +19,7 @@ package org.trustedanalytics.servicebroker.gearpump.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
+import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.service.CloudFoundryService;
 import org.trustedanalytics.servicebroker.gearpump.service.CredentialPersistorService;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpSpawner;
@@ -35,8 +36,10 @@ public class GearPumpSpawnerConfig {
     @Bean
     public GearPumpSpawner getGearPumpSpawner(GearPumpDriverExec gearPumpDriver,
                                               CloudFoundryService cloudFoundryService,
-                                              YarnAppManager yarnAppManager) throws IOException, LoginException {
-        return new GearPumpSpawner(gearPumpDriver, cloudFoundryService, yarnAppManager);
+                                              YarnAppManager yarnAppManager,
+                                              CatalogConfig catalogConfig,
+                                              KerberosService kerberosService) throws IOException, LoginException {
+        return new GearPumpSpawner(gearPumpDriver, cloudFoundryService, yarnAppManager, catalogConfig, kerberosService);
     }
 
     @Bean

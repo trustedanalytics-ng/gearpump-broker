@@ -34,13 +34,13 @@ public class GearPumpServiceInstanceService extends ForwardingServiceInstanceSer
     private static final Logger LOGGER = LoggerFactory.getLogger(GearPumpServiceInstanceService.class);
     public static final String COULD_NOT_SPAWN_GEARPUMP_INSTANCE = "Couldn't spawn GearPump instance";
 
-    @Autowired
     private GearPumpSpawner gearPumpSpawner;
-    @Autowired
     private CredentialPersistorService credentialPersistorService;
 
-    public GearPumpServiceInstanceService(ServiceInstanceService delegate) {
+    public GearPumpServiceInstanceService(ServiceInstanceService delegate, GearPumpSpawner gearPumpSpawner, CredentialPersistorService credentialPersistorService) {
         super(delegate);
+        this.gearPumpSpawner = gearPumpSpawner;
+        this.credentialPersistorService = credentialPersistorService;
     }
 
     @Override

@@ -18,6 +18,7 @@ package org.trustedanalytics.servicebroker.gearpump.config;
 
 import org.trustedanalytics.cfbroker.store.api.BrokerStore;
 import org.trustedanalytics.cfbroker.store.impl.ServiceInstanceServiceStore;
+import org.trustedanalytics.servicebroker.gearpump.service.CredentialPersistorService;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpServiceInstanceService;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceService;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.trustedanalytics.servicebroker.gearpump.service.GearPumpSpawner;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -37,7 +39,8 @@ public class ServiceInstanceServiceConfig {
     private BrokerStore<ServiceInstance> store;
 
     @Bean
-    public ServiceInstanceService getServiceInstanceService() throws IOException, LoginException {
-        return new GearPumpServiceInstanceService(new ServiceInstanceServiceStore(store));
+    public ServiceInstanceService getServiceInstanceService(GearPumpSpawner gearPumpSpawner, CredentialPersistorService credentialPersistorService)
+            throws IOException, LoginException {
+        return new GearPumpServiceInstanceService(new ServiceInstanceServiceStore(store), gearPumpSpawner, credentialPersistorService);
     }
 }

@@ -37,24 +37,24 @@ public class GearPumpSpawner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GearPumpSpawner.class);
 
+    private static final String ADMIN_USERNAME = "admin";
+
     private final GearPumpDriverExec gearPumpDriver;
     private final CloudFoundryService cloudFoundryService;
     private final YarnAppManager yarnAppManager;
-    private static final String ADMIN_USERNAME = "admin";
-
-    //TODO can be Autowired in future
+    private final CatalogConfig configuration;
     private final KerberosService kerberosService;
-
-    @Autowired
-    private CatalogConfig configuration;
 
     public GearPumpSpawner(GearPumpDriverExec gearPumpDriver,
                            CloudFoundryService cloudFoundryService,
-                           YarnAppManager yarnAppManager) throws IOException {
+                           YarnAppManager yarnAppManager,
+                           CatalogConfig catalogConfig,
+                           KerberosService kerberosService) throws IOException {
         this.gearPumpDriver = gearPumpDriver;
         this.cloudFoundryService = cloudFoundryService;
         this.yarnAppManager = yarnAppManager;
-        kerberosService = new KerberosService(new KerberosConfig().getKerberosProperties());
+        this.configuration = catalogConfig;
+        this.kerberosService = kerberosService;
     }
 
     private GearPumpCredentials provisionOnYarn(String numberOfWorkers) throws Exception {

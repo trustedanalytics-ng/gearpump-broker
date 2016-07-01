@@ -48,11 +48,9 @@ public class CloudFoundryService {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
-    @Autowired
-    private CfCallerConfiguration cfCallerConfiguration;
 
-    @Autowired
-    CfCaller cfCaller;
+    private final CfCallerConfiguration cfCallerConfiguration;
+    private final CfCaller cfCaller;
 
     @Value("${api.endpoint}")
     private String cfApiEndpoint;
@@ -96,6 +94,12 @@ public class CloudFoundryService {
     private static String uiSpaceGuid;
     private static String uiServiceGuid;
     private static String uiServicePlanGuid;
+
+    @Autowired
+    public CloudFoundryService(CfCallerConfiguration cfCallerConfiguration, CfCaller cfCaller) {
+        this.cfCallerConfiguration = cfCallerConfiguration;
+        this.cfCaller = cfCaller;
+    }
 
     @PostConstruct
     private void init() throws DashboardServiceException {
@@ -193,10 +197,10 @@ public class CloudFoundryService {
     }
 
     private String createUIInstance(String uiInstanceName, String spaceId, String orgId, String username,
-                                    String password, String gearpumpMaster, String uaaClientName, String Callback) throws IOException {
+                                    String password, String gearpumpMaster, String uaaClientName, String callback) throws IOException {
         LOGGER.info("Creating Service Instance");
         String body = String.format(CREATE_SERVICE_BODY_TEMPLATE, uiInstanceName, spaceId, uiServicePlanGuid, uiInstanceName,
-                username, password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId, Callback);
+                username, password, gearpumpMaster, uaaClientName, password, loginHost(), cfApiEndpoint, orgId, callback);
         LOGGER.debug("Create app body: {}", body);
         ResponseEntity<String> response = execute(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, cfApiEndpoint);
         String uiServiceInstanceGuid = cfCaller.getValueFromJson(response.getBody(), METADATA_GUID);
@@ -223,11 +227,11 @@ public class CloudFoundryService {
         return domain;
     }
 
-    public String loginHost() {
+    private String loginHost() {
         return loginApiEndpoint.replaceAll("/oauth/authorize", "");
     }
 
-    public void deleteUIServiceInstance(String uiServiceGuid) {
+    private void deleteUIServiceInstance(String uiServiceGuid) {
         try {
             execute(DELETE_SERVICE_URL, HttpMethod.DELETE, "", cfApiEndpoint, uiServiceGuid);
         } catch (HttpClientErrorException e) {
@@ -255,6 +259,7 @@ public class CloudFoundryService {
              uaaToken = cfCaller.getValueFromJson(response.getBody(), UAA_TOKEN_TYPE)
                         + " " + cfCaller.getValueFromJson(response.getBody(), UAA_ACCESS_TOKEN);
         } catch (IOException e) {
+            e.printStackTrace();
             throw new DashboardServiceException("Cannot obtain UAA token.", e);
         }
         LOGGER.debug("UAA access token has been obtained.");
