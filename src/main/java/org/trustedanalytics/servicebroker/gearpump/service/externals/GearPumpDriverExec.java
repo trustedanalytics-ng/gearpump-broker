@@ -21,7 +21,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.trustedanalytics.servicebroker.gearpump.config.ExternalConfiguration;
+import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
@@ -50,7 +50,7 @@ public class GearPumpDriverExec {
     private ResourceManagerService resourceManagerService;
 
     @Autowired
-    private ExternalConfiguration externalConfiguration;
+    private GearPumpSpawnerConfig gearPumpSpawnerConfig;
 
     @Autowired
     private HdfsUtils hdfsUtils;
@@ -65,7 +65,7 @@ public class GearPumpDriverExec {
 
     private String getDestDir() {
         try {
-            return resourceManagerService.getRealPath(externalConfiguration.getGearPumpDestinationFolder());
+            return resourceManagerService.getRealPath(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
         } catch (IOException e) {
             LOGGER.debug("Swallowing exception while getting destDir.", e);
             return null;
@@ -118,12 +118,12 @@ public class GearPumpDriverExec {
 
     private ExternalProcessExecutorResult deployGearPumpOnYarn(String outputReportFilePath, String numberOfWorkers) {
         String[] command = getGearPumpYarnCommand(outputReportFilePath);
-        Map<String, String> envProperties = getEnvForProcessBuilder(numberOfWorkers, externalConfiguration.getWorkersMemoryLimit());
+        Map<String, String> envProperties = getEnvForProcessBuilder(numberOfWorkers, gearPumpSpawnerConfig.getWorkersMemoryLimit());
         return externalProcessExecutor.run(command, destDir, envProperties);
     }
 
     private String[] getGearPumpYarnCommand(String outputReportFilePath) {
-        String gearpumpPackUri = hdfsUtils.getHdfsUri() + externalConfiguration.getHdfsGearPumpPackPath();
+        String gearpumpPackUri = hdfsUtils.getHdfsUri() + gearPumpSpawnerConfig.getHdfsGearPumpPackPath();
         return String.format(COMMAND_LINE_TEMPLATE_SPAWN, gearpumpPackUri, outputReportFilePath).split(" ");
     }
 

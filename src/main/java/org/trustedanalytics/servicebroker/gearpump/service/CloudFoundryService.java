@@ -259,7 +259,6 @@ public class CloudFoundryService {
              uaaToken = cfCaller.getValueFromJson(response.getBody(), UAA_TOKEN_TYPE)
                         + " " + cfCaller.getValueFromJson(response.getBody(), UAA_ACCESS_TOKEN);
         } catch (IOException e) {
-            e.printStackTrace();
             throw new DashboardServiceException("Cannot obtain UAA token.", e);
         }
         LOGGER.debug("UAA access token has been obtained.");

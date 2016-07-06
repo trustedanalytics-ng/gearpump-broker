@@ -19,9 +19,8 @@ package org.trustedanalytics.servicebroker.gearpump.service.prerequisities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.trustedanalytics.servicebroker.gearpump.config.ExternalConfiguration;
+import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.ExternalProcessException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.HdfsUtils;
@@ -48,16 +47,13 @@ public class PrerequisitesChecker {
     private ResourceManagerService resourceManagerService;
 
     @Autowired
-    private ExternalConfiguration externalConfiguration;
+    private GearPumpSpawnerConfig gearPumpSpawnerConfig;
 
     @Autowired
     private YarnConfigFilesProvider yarnConfigFilesProvider;
 
     @Autowired
     private ExternalProcessExecutor externalProcessExecutor;
-
-    @Value("${yarn.conf.dir}")
-    private String yarnConfDir;
 
     private String destDir;
 
@@ -70,7 +66,7 @@ public class PrerequisitesChecker {
     public void ensurePrerequisities() {
         LOGGER.info("ensure prerequisities invoked");
 
-        String gearPumpPackName = externalConfiguration.getGearPumpPackName();
+        String gearPumpPackName = gearPumpSpawnerConfig.getGearPumpPackName();
         String archiveLocalPath = String.format("gearpump/%s", gearPumpPackName);
 
         // 1. check if the archive exists
@@ -101,7 +97,7 @@ public class PrerequisitesChecker {
     }
 
     private void checkIfUnpackedVersionExists(String archiveLocalPath) {
-        boolean archiveUnpacked = resourceManagerService.checkIfExists(externalConfiguration.getGearPumpDestinationFolder());
+        boolean archiveUnpacked = resourceManagerService.checkIfExists(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
 
         LOGGER.info("Checking if the archive was unpacked");
         if (!archiveUnpacked) {
@@ -123,7 +119,7 @@ public class PrerequisitesChecker {
         }
 
         try {
-            destDir = resourceManagerService.getRealPath(externalConfiguration.getGearPumpDestinationFolder());
+            destDir = resourceManagerService.getRealPath(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
             setBinariesExecutable();
         } catch (IOException | ExternalProcessException e) {
             LOGGER.error("Error making GearPump binaires executable.", e);
@@ -139,7 +135,7 @@ public class PrerequisitesChecker {
     }
 
     private void checkIfHdfsDirExists() {
-        String hdfsDirectory = externalConfiguration.getHdfsDir();
+        String hdfsDirectory = gearPumpSpawnerConfig.getHdfsDir();
         LOGGER.info("Check if HDFS directory for GearPump archive exists.");
         boolean hdfsDirExists;
         try {
@@ -164,7 +160,7 @@ public class PrerequisitesChecker {
     }
 
     private void checkPresenceOfPackOnHdfs(String archiveLocalPath) {
-        String hdfsFilePath = externalConfiguration.getHdfsGearPumpPackPath();
+        String hdfsFilePath = gearPumpSpawnerConfig.getHdfsGearPumpPackPath();
         LOGGER.info("Checking if the archive ({}) is stored in hdfs", hdfsFilePath);
         boolean hdfsFileExists;
         try {
@@ -194,7 +190,7 @@ public class PrerequisitesChecker {
     }
 
     private void copyYarnConfigFiles() throws ExternalProcessException {
-        String[] command = new String[]{"cp", "-R", String.format("%s/.", yarnConfDir), String.format("%s/conf/", destDir)};
+        String[] command = new String[]{"cp", "-R", String.format("%s/.", gearPumpSpawnerConfig.getYarnConfDir()), String.format("%s/conf/", destDir)};
         runCommand(command);
     }
 

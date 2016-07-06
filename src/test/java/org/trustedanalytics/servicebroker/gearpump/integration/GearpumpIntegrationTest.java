@@ -18,7 +18,7 @@ package org.trustedanalytics.servicebroker.gearpump.integration;
 
 import org.junit.Ignore;
 import org.trustedanalytics.servicebroker.gearpump.Application;
-import org.trustedanalytics.servicebroker.gearpump.config.ExternalConfiguration;
+import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.service.ConfigurationTest;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpServiceInstanceBindingService;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpServiceInstanceService;
@@ -41,7 +41,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 public class GearpumpIntegrationTest {
 
     @Autowired
-    private ExternalConfiguration conf;
+    private GearPumpSpawnerConfig conf;
 
     @Autowired
     private GearPumpServiceInstanceService isntanceService;

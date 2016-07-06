@@ -32,7 +32,7 @@ public class CredentialPersistorService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    private ZookeeperClient zookeeperClient;
+    private final ZookeeperClient zookeeperClient;
 
     public CredentialPersistorService(ZookeeperClient zookeeperClient) {
         this.zookeeperClient = zookeeperClient;

@@ -32,7 +32,7 @@ import java.util.Map;
 public class GearPumpServiceInstanceBindingService extends ForwardingServiceInstanceBindingServiceStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(GearPumpServiceInstanceBindingService.class);
 
-    private CredentialPersistorService credentialPersistorService;
+    private final CredentialPersistorService credentialPersistorService;
 
     public GearPumpServiceInstanceBindingService(ServiceInstanceBindingService instanceBindingService, CredentialPersistorService credentialPersistorService) {
         super(instanceBindingService);

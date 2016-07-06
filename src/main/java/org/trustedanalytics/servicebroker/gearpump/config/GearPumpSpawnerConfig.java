@@ -16,6 +16,7 @@
 
 package org.trustedanalytics.servicebroker.gearpump.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
@@ -27,18 +28,40 @@ import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpCre
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
 import org.trustedanalytics.servicebroker.gearpump.yarn.YarnAppManager;
 
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
+import javax.validation.constraints.NotNull;
 
 @Configuration
 public class GearPumpSpawnerConfig {
+
+    @Value("${gearpump.pack.name}")
+    @NotNull
+    private String gearPumpPackName;
+
+    @Value("${gearpump.destinationFolder}")
+    @NotNull
+    private String gearPumpDestinationFolder;
+
+    @Value("${yarn.conf.dir}")
+    private String yarnConfDir;
+
+    @Value("${gearpump.hdfsDir}")
+    @NotNull
+    private String hdfsDir;
+
+    @Value("${workers.memorylimit}")
+    @NotNull
+    private String workersMemoryLimit;
+
+    public String getHdfsGearPumpPackPath() {
+        return String.format("%s/%s", hdfsDir, gearPumpPackName);
+    }
 
     @Bean
     public GearPumpSpawner getGearPumpSpawner(GearPumpDriverExec gearPumpDriver,
                                               CloudFoundryService cloudFoundryService,
                                               YarnAppManager yarnAppManager,
                                               CatalogConfig catalogConfig,
-                                              KerberosService kerberosService) throws IOException, LoginException {
+                                              KerberosService kerberosService) {
         return new GearPumpSpawner(gearPumpDriver, cloudFoundryService, yarnAppManager, catalogConfig, kerberosService);
     }
 
@@ -57,4 +80,34 @@ public class GearPumpSpawnerConfig {
         return new CredentialPersistorService(getZKClient);
     }
 
+    public String getGearPumpPackName() {
+        return gearPumpPackName;
+    }
+
+    public String getGearPumpDestinationFolder() {
+        return gearPumpDestinationFolder;
+    }
+
+    public String getHdfsDir() {
+        return hdfsDir;
+    }
+
+    public String getWorkersMemoryLimit() {
+        return workersMemoryLimit;
+    }
+
+    public String getYarnConfDir() {
+        return yarnConfDir;
+    }
+
+    @Override
+    public String toString() {
+        return "GearPumpSpawnerConfig{" +
+                ", gearPumpPackName='" + gearPumpPackName + '\'' +
+                ", gearPumpDestinationFolder='" + gearPumpDestinationFolder + '\'' +
+                ", hdfsDir='" + hdfsDir + '\'' +
+                ", workersMemoryLimit='" + workersMemoryLimit + '\'' +
+                ", yarnConfDir='" + yarnConfDir + '\'' +
+                '}';
+    }
 }

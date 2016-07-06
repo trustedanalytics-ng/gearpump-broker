@@ -22,7 +22,6 @@ import org.trustedanalytics.hadoop.config.client.*;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 @Configuration
@@ -43,7 +42,7 @@ public class KerberosConfig {
     }
 
     @Bean
-    public KerberosService kerberosService() throws IOException, LoginException {
+    public KerberosService kerberosService() throws IOException {
         return new KerberosService(getKerberosProperties());
     }
 }

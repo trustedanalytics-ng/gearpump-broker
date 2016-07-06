@@ -27,9 +27,6 @@ import org.trustedanalytics.cfbroker.store.impl.ServiceInstanceBindingServiceSto
 import org.trustedanalytics.servicebroker.gearpump.service.CredentialPersistorService;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpServiceInstanceBindingService;
 
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
-
 
 @Configuration
 public class ServiceInstanceBindingServiceConfig {
@@ -38,7 +35,7 @@ public class ServiceInstanceBindingServiceConfig {
     private BrokerStore<CreateServiceInstanceBindingRequest> store;
 
     @Bean
-    public ServiceInstanceBindingService getServiceInstanceBindingService(CredentialPersistorService credentialPersistorService) throws IOException, LoginException {
+    public ServiceInstanceBindingService getServiceInstanceBindingService(CredentialPersistorService credentialPersistorService) {
         return new GearPumpServiceInstanceBindingService(new ServiceInstanceBindingServiceStore(store), credentialPersistorService);
     }
 }

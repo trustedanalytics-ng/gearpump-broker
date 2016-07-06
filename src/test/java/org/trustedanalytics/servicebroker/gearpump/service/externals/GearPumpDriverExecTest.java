@@ -24,7 +24,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.trustedanalytics.servicebroker.gearpump.config.ExternalConfiguration;
+import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
@@ -61,7 +61,7 @@ public class GearPumpDriverExecTest {
     @Mock
     private ResourceManagerService resourceManagerService;
     @Mock
-    private ExternalConfiguration externalConfiguration;
+    private GearPumpSpawnerConfig externalConfiguration;
     @Mock
     private HdfsUtils hdfsUtils;
     @Mock

@@ -24,7 +24,6 @@ import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.trustedanalytics.cfbroker.store.impl.ForwardingServiceInstanceServiceStore;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 
@@ -34,8 +33,8 @@ public class GearPumpServiceInstanceService extends ForwardingServiceInstanceSer
     private static final Logger LOGGER = LoggerFactory.getLogger(GearPumpServiceInstanceService.class);
     public static final String COULD_NOT_SPAWN_GEARPUMP_INSTANCE = "Couldn't spawn GearPump instance";
 
-    private GearPumpSpawner gearPumpSpawner;
-    private CredentialPersistorService credentialPersistorService;
+    private final GearPumpSpawner gearPumpSpawner;
+    private final CredentialPersistorService credentialPersistorService;
 
     public GearPumpServiceInstanceService(ServiceInstanceService delegate, GearPumpSpawner gearPumpSpawner, CredentialPersistorService credentialPersistorService) {
         super(delegate);

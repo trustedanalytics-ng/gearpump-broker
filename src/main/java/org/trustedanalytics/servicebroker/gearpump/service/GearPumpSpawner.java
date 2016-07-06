@@ -21,16 +21,13 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.trustedanalytics.servicebroker.gearpump.config.CatalogConfig;
-import org.trustedanalytics.servicebroker.gearpump.config.KerberosConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.SpawnResult;
 import org.trustedanalytics.servicebroker.gearpump.yarn.YarnAppManager;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class GearPumpSpawner {
@@ -49,7 +46,7 @@ public class GearPumpSpawner {
                            CloudFoundryService cloudFoundryService,
                            YarnAppManager yarnAppManager,
                            CatalogConfig catalogConfig,
-                           KerberosService kerberosService) throws IOException {
+                           KerberosService kerberosService) {
         this.gearPumpDriver = gearPumpDriver;
         this.cloudFoundryService = cloudFoundryService;
         this.yarnAppManager = yarnAppManager;

@@ -28,9 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.trustedanalytics.servicebroker.gearpump.service.GearPumpSpawner;
 
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
-
 @Configuration
 public class ServiceInstanceServiceConfig {
 
@@ -39,8 +36,7 @@ public class ServiceInstanceServiceConfig {
     private BrokerStore<ServiceInstance> store;
 
     @Bean
-    public ServiceInstanceService getServiceInstanceService(GearPumpSpawner gearPumpSpawner, CredentialPersistorService credentialPersistorService)
-            throws IOException, LoginException {
+    public ServiceInstanceService getServiceInstanceService(GearPumpSpawner gearPumpSpawner, CredentialPersistorService credentialPersistorService) {
         return new GearPumpServiceInstanceService(new ServiceInstanceServiceStore(store), gearPumpSpawner, credentialPersistorService);
     }
 }

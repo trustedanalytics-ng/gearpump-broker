@@ -18,7 +18,7 @@ package org.trustedanalytics.servicebroker.gearpump.service;
 
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClientBuilder;
-import org.trustedanalytics.servicebroker.gearpump.config.ExternalConfiguration;
+import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.utils.GearpumpTestUtils;
 
 import org.apache.curator.test.TestingServer;
@@ -38,7 +38,7 @@ public class ConfigurationTest {
     private final String ZNODE = "/node";
 
     @Autowired
-    private ExternalConfiguration conf;
+    private GearPumpSpawnerConfig conf;
 
     @Bean
     public TestingServer initEmbededZKServer() throws Exception {
