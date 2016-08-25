@@ -32,9 +32,7 @@
 # Add default JVM options here. You can also use JAVA_OPTS and DASHBOARD_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS="-server"
 
-APP_NAME="gearpump-dashboard"
-APP_BASE_NAME=`basename "$0"`
-PROG_VERSION=0.7.6
+PROG_VERSION=0.8.0
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
@@ -157,8 +155,22 @@ fi
 DIGEST=$(exec "$JAVACMD" -classpath "$CLASSPATH" io.gearpump.security.PasswordUtil -password $PASSWORD | tail -1)
 
 # replace config variables
-toFind=("\"AeGxGOxlU8QENdOXejCeLxy+isrCv0TrS37HwA==\"" "\"default-userrole\" = \"guest\"" "<your client id registered on UAA>" "<your client secret registered on UAA>" "http://<cloud foundry login endpoint>" "http://<cloud foundry api endpoint>" "<organization-guid>" "127.0.0.1:8090/login/oauth2/cloudfoundryuaa/callback")
-toReplace=("\"$DIGEST\"" "\"default-userrole\" = \"admin\"" $UAA_CLIENT_ID $UAA_CLIENT_SECRET $UAA_HOST $CF_API_ENDPOINT $ORG_ID "${CALLBACK}/login/oauth2/cloudfoundryuaa/callback")
+toFind=("\"AeGxGOxlU8QENdOXejCeLxy+isrCv0TrS37HwA==\""
+        "\"default-userrole\" = \"guest\""
+        "\"io.gearpump.services.security.oauth2.impl.CloudFoundryUAAOAuth2Authenticator\""
+        "<your client id registered on UAA>"
+        "<your client secret registered on UAA>"
+        "http://<cloud foundry login endpoint>"
+        "http://<cloud foundry api endpoint>/v2/organizations/<organization-guid>"
+        "127.0.0.1:8090/login/oauth2/cloudfoundryuaa/callback")
+toReplace=("\"$DIGEST\""
+           "\"default-userrole\" = \"admin\""
+           "\"io.gearpump.services.security.oauth2.impl.CustomCloudFoundryUAAOAuth2Authenticator\"\n\tscope=\"$UAA_SCOPE\""
+           $UAA_CLIENT_ID
+           $UAA_CLIENT_SECRET
+           $UAA_HOST
+           "http://${USER_MANAGEMENT_SERVICE_HOST}:${USER_MANAGEMENT_SERVICE_PORT}/rest/orgs"
+           "${CALLBACK}/login/oauth2/cloudfoundryuaa/callback")
 
 i=0
 for index in "${toFind[@]}"

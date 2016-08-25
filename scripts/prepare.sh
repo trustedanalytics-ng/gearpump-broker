@@ -26,9 +26,11 @@
 ##############################################################################
 if [ "$#" -ne 2 ]; then
     echo "Illegal number of arguments. GP_HOME and DEST_DIR required (see source code)."
-    echo "Example usage: ./prepare.sh gearpump-2.11-0.7.4 gearpump-dashboard"
+    echo "Example usage: ./prepare.sh gearpump-2.11-0.8.0 gearpump-dashboard"
     exit 1
 fi
+
+echo "Preparing the Gearpump dashboard tar.gz package..."
 
 GP_HOME=$1
 DEST_DIR=$2
@@ -55,6 +57,21 @@ cp $GP_HOME/lib/services/* $DEST_DIR/lib/services
 cp $GP_HOME/VERSION $DEST_DIR/lib/
 cp $GP_HOME/VERSION $DEST_DIR/
 
+# prepare gearpump-dashboard overrides
+
+TARGET_FOLDER=$(pwd)/../target/tap-gearpump-dashboard
+TAP_DASHBOARD_JAVA=$(pwd)/../src/dashboard/java
+CUSTOM_AUTHENTICATOR_CLASS=io/gearpump/services/security/oauth2/impl/CustomCloudFoundryUAAOAuth2Authenticator
+
+rm -rf $TARGET_FOLDER
+mkdir -p $TARGET_FOLDER
+
+echo "Compiling tap-gearpump-dashboard classes"
+javac -cp $DEST_DIR/lib/services/gearpump-services_2.11-0.8.0.jar:$DEST_DIR/lib/config-1.3.0.jar:$DEST_DIR/lib/scala-library-2.11.8.jar -d $TARGET_FOLDER $TAP_DASHBOARD_JAVA/$CUSTOM_AUTHENTICATOR_CLASS.java
+
+echo "Creating tap-gearpump-dashboard.jar file"
+jar cvf $DEST_DIR/lib/tap-gearpump-dashboard.jar -C $TARGET_FOLDER $CUSTOM_AUTHENTICATOR_CLASS.class
+
 # compute classpath
 CP_STRING=""
 JAR_PREFIX=\$APP_HOME
@@ -77,6 +94,6 @@ sed -i "s|CLASSPATH=TOCHANGE|CLASSPATH=${CP_STRING}|" "$DEST_DIR/bin/dashboard"
 cp dashboard-manifest.yml $DEST_DIR/manifest.yml
 
 cd $DEST_DIR/
-#make zip in target directory
+#make tar.gz in target directory
 mkdir target/
-zip -r target/gearpump-dashboard.zip bin/ lib/ conf/ dashboard/ VERSION
+tar -zcf target/gearpump-dashboard.tar.gz bin/ lib/ conf/ dashboard/ VERSION

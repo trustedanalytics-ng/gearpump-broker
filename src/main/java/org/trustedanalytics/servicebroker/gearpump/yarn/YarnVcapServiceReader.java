@@ -19,10 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Deprecated
 @Configuration
 class YarnVcapServiceReader {
 
-    @Value("${${yarn.conf.vcap_location}:not_supported}")
+//    @Value("${${yarn.conf.vcap_location}:not_supported}")
     private String base64ZipFiles;
 
     @Bean

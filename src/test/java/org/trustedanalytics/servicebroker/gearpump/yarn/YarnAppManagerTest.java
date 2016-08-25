@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 import static org.mockito.Mockito.*;
@@ -51,7 +52,7 @@ public class YarnAppManagerTest {
     private YarnAppManager yarnAppManager;
 
     @Before
-    public void init() throws IOException, YarnException {
+    public void init() throws IOException, YarnException, LoginException {
         yarnAppManager = new YarnAppManager();
         MockitoAnnotations.initMocks(this);
         mockYarnClient();
@@ -68,7 +69,7 @@ public class YarnAppManagerTest {
         yarnAppManager.killApplication(correct_application_id);
     }
 
-    private void mockYarnClient() throws IOException, YarnException {
+    private void mockYarnClient() throws IOException, YarnException, LoginException {
         doNothing().when(yarnClient).start();
         doNothing().when(yarnClient).init(Mockito.<Configuration>any());
         doNothing().when(yarnClient).killApplication(Mockito.<ApplicationId>any());

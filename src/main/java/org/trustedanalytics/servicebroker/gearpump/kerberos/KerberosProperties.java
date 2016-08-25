@@ -25,6 +25,7 @@ public class KerberosProperties {
     private String realm = "";
     private String user = "";
     private String password = "";
+    private boolean enabled;
 
     public String getKdc() {
         return kdc;
@@ -58,9 +59,18 @@ public class KerberosProperties {
         this.password = password;
     }
 
+    public void setKerberosEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isKerberosEnabled() {
+        return enabled;
+    }
+
     @Override
     public String toString() {
         return "KerberosProperties{" +
+                "enabled='" + enabled + '\'' +
                 "kdc='" + kdc + '\'' +
                 ", realm='" + realm + '\'' +
                 ", user='" + user + '\'' +

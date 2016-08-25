@@ -28,6 +28,7 @@ import org.trustedanalytics.servicebroker.gearpump.service.file.ArchiverService;
 import org.trustedanalytics.servicebroker.gearpump.service.file.ResourceManagerService;
 import org.trustedanalytics.servicebroker.gearpump.yarn.YarnConfigFilesProvider;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -55,8 +56,6 @@ public class PrerequisitesChecker {
     @Autowired
     private ExternalProcessExecutor externalProcessExecutor;
 
-    private String destDir;
-
     /**
      * Ensure that requirements are met in order to start provisioning:
      * <li>gearpump binary pack (archive) is present</li>
@@ -67,8 +66,7 @@ public class PrerequisitesChecker {
         LOGGER.info("ensure prerequisities invoked");
 
         String gearPumpPackName = gearPumpSpawnerConfig.getGearPumpPackName();
-        String archiveLocalPath = String.format("gearpump/%s", gearPumpPackName);
-
+        String archiveLocalPath = gearPumpPackName;
         // 1. check if the archive exists
         checkIfTheArchiveExists(archiveLocalPath, gearPumpPackName);
 
@@ -86,7 +84,9 @@ public class PrerequisitesChecker {
 
     private void checkIfTheArchiveExists(String archiveLocalPath, String gearPumpPackName) {
         LOGGER.info("Checking if archive {} exists. ", archiveLocalPath);
-        boolean archivePresent = resourceManagerService.checkIfExists(archiveLocalPath);
+        File gearpumpArchive = new File(archiveLocalPath);
+        LOGGER.debug("gearpumpArchive.path: {}", gearpumpArchive.getAbsolutePath());
+        boolean archivePresent = gearpumpArchive.exists();
         if (!archivePresent) {
             LOGGER.info("GearPump archive not present. Downloading it...");
             // for now it's always there - it's included in the build
@@ -97,9 +97,10 @@ public class PrerequisitesChecker {
     }
 
     private void checkIfUnpackedVersionExists(String archiveLocalPath) {
-        boolean archiveUnpacked = resourceManagerService.checkIfExists(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
-
-        LOGGER.info("Checking if the archive was unpacked");
+        LOGGER.info("Checking if the archive was unpacked in location: {}", gearPumpSpawnerConfig.getGearPumpDestinationFolder());
+        File gearpumpDestinationFolder = new File(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
+        LOGGER.debug("gearpumpDestinationFolder.path: {}", gearpumpDestinationFolder.getAbsolutePath());
+        boolean archiveUnpacked = gearpumpDestinationFolder.exists();
         if (!archiveUnpacked) {
             LOGGER.info("GearPump archive was not unpacked. Doing it now ...");
             try {
@@ -110,18 +111,9 @@ public class PrerequisitesChecker {
             }
         }
 
-        LOGGER.info("Checking yarn-conf files...");
         try {
-            yarnConfigFilesProvider.prepareConfigFiles();
-        } catch (IOException e) {
-            LOGGER.error("Cannot unzip and store yarn config files from yarn-gearpump", e);
-            throw new PrerequisitesException("Cannot unzip and store yarn config files from yarn-gearpump");
-        }
-
-        try {
-            destDir = resourceManagerService.getRealPath(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
             setBinariesExecutable();
-        } catch (IOException | ExternalProcessException e) {
+        } catch (ExternalProcessException e) {
             LOGGER.error("Error making GearPump binaires executable.", e);
             throw new PrerequisitesException("Error making GearPump binaires executable.", e);
         }
@@ -136,7 +128,7 @@ public class PrerequisitesChecker {
 
     private void checkIfHdfsDirExists() {
         String hdfsDirectory = gearPumpSpawnerConfig.getHdfsDir();
-        LOGGER.info("Check if HDFS directory for GearPump archive exists.");
+        LOGGER.info("Check if HDFS directory for GearPump archive exists. hdfsDirectory: {}", hdfsDirectory);
         boolean hdfsDirExists;
         try {
             hdfsDirExists = hdfsUtils.directoryExists(hdfsDirectory);
@@ -185,17 +177,17 @@ public class PrerequisitesChecker {
     }
 
     private void setBinariesExecutable() throws ExternalProcessException {
-        String[] command = new String[]{"chmod", "-R", "+x", "bin"};
+        String[] command = new String[]{"chmod", "-R", "+x", String.format("%s/bin", gearPumpSpawnerConfig.getGearPumpDestinationFolder())};
         runCommand(command);
     }
 
     private void copyYarnConfigFiles() throws ExternalProcessException {
-        String[] command = new String[]{"cp", "-R", String.format("%s/.", gearPumpSpawnerConfig.getYarnConfDir()), String.format("%s/conf/", destDir)};
+        String[] command = new String[]{"cp", "-R", String.format("%s/.", gearPumpSpawnerConfig.getYarnConfDir()), String.format("%s/conf/", gearPumpSpawnerConfig.getGearPumpDestinationFolder())};
         runCommand(command);
     }
 
     private void runCommand(String[] command) throws ExternalProcessException {
         LOGGER.debug("Executing command: {}", Arrays.toString(command));
-        externalProcessExecutor.runCommand(command, destDir, null);
+        externalProcessExecutor.runCommand(command, gearPumpSpawnerConfig.getGearPumpDestinationFolder(), null);
     }
 }

@@ -5,15 +5,26 @@ gearpump:
   pack:
     name: gearpump-${gearpump.pack.version:0.0.0}.zip
     version: ${gearpump.pack.version:0.0.0}
-  destinationFolder: gearpump-${gearpump.pack.version:0.0.0}
-  gearpumpUri: ${gearpump.uri:}
+  # APP_ROOT is set in Dockerfile
+  destinationFolder: ${app.root:.}/gearpump-${gearpump.pack.version:0.0.0}
+#  gearpumpUri: ${gearpump.uri:}
   hdfsDir: ${hdfs.dir:/user/gearpump}
   confDir: conf/yarn.conf
+  yarnclient:
+    jarPath: lib/
+
   uiOrg: ${GEARPUMP_UI_ORG:}
   uiSpace: ${GEARPUMP_UI_SPACE:}
   uiName: ${GEARPUMP_UI_NAME:}
-  yarnclient:
-    jarPath: lib/
+  uiServiceId: ${GEARPUMP_UI_CATALOG_SERVICE_ID:}
+  uiServicePlanId: ${GEARPUMP_UI_CATALOG_SERVICE_PLAN_ID:}
+
+tap:
+  user:
+    name: ${TAP_USER_NAME:admin}
+    password: ${TAP_USER_PASSWORD:password}
+  api.endpoint: ${TAP_API_ENDPOINT}
+
 cf:
   #name of service in cloud foundry catalog
   servicename: ${cf.catalog.servicename:gearpump}
@@ -26,18 +37,25 @@ metadata:
 workers:
   memorylimit: ${WORKERS_MEMORY_LIMIT:}
 
+hdfs:
+  uri: ${HDFS_URI:}
+
+zookeeper:
+  cluster: ${ZK_CLUSTER:}
+  node: ${ZK_NODE:}
 
 kerberos:
   kdc: ${KRB_KDC:kdc}
   realm: ${KRB_REALM:realm}
   user: ${KRB_USER:user}
   password: ${KRB_PASSWORD:password}
+  enabled: ${KRB_ENABLED:false}
 
 #do not change name of "HADOOP_CONF_DIR" env variable - hadoop cmd client is also using it
 yarn:
   conf:
-    dir: ${HADOOP_CONF_DIR:/yarn-conf}
-    vcap_location: vcap.services.yarn-gearpump.credentials.HADOOP_CONFIG_ZIP.encoded_zip
+    dir: ${HADOOP_CONF_DIR:/etc/hadoop}
+#    vcap_location: vcap.services.yarn-gearpump.credentials.HADOOP_CONFIG_ZIP.encoded_zip
     override: false
 
 api.endpoint: ${vcap.services.sso.credentials.apiEndpoint:}
@@ -59,3 +77,4 @@ spring.oauth2:
 logging:
   level:
     org.trustedanalytics.servicebroker.gearpump: DEBUG
+  config: log4j.properties

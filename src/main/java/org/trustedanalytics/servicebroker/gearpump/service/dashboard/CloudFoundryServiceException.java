@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.trustedanalytics.servicebroker.gearpump.service;
+package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
 
 public class CloudFoundryServiceException extends Exception {
     public CloudFoundryServiceException() {

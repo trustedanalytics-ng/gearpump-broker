@@ -1,0 +1,29 @@
+# Copyright (c) 2016 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+FROM tapimages.us.enableiot.com:8080/tap-base-java:java8-jessie
+MAINTAINER Pawel Procaj <pawelx.procaj@intel.com>
+
+ENV APP_ROOT="/opt/app" \
+    SERVER_PORT=80 \
+    GEARPUMP_BROKER_VERSION=0.8.2
+
+EXPOSE 80
+
+RUN mkdir -p ${APP_ROOT}
+WORKDIR ${APP_ROOT}
+ADD gearpump-broker-${GEARPUMP_BROKER_VERSION}.tar.gz .
+
+CMD ["./run.sh"]

@@ -75,7 +75,7 @@ public class ArchiverService {
     }
 
     public void unzip(String archiveFile) throws IOException {
-        unzip(resourceManager.getResourceInputStream(archiveFile), true);
+        unzip(new FileInputStream(archiveFile), true);
     }
 
     public void unzip(InputStream inputStream, boolean overrideFiles) throws IOException {

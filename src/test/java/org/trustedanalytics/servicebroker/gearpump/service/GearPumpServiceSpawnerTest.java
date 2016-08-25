@@ -24,6 +24,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.trustedanalytics.servicebroker.gearpump.config.CatalogConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.CloudFoundryServiceException;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardDeployer;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.ExternalProcessException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.SpawnResult;
@@ -44,7 +46,7 @@ public class GearPumpServiceSpawnerTest {
     private GearPumpDriverExec gearPumpDriver;
 
     @Mock
-    private CloudFoundryService cloudFoundryService;
+    private DashboardDeployer dashboardDeployer;
 
     @Mock
     private YarnAppManager yarnAppManager;
@@ -55,12 +57,11 @@ public class GearPumpServiceSpawnerTest {
     @Mock
     private KerberosService kerberosService;
 
-
     private GearPumpSpawner gearPumpSpawner;
 
     @Before
     public void before() throws IOException {
-        gearPumpSpawner = new GearPumpSpawner(gearPumpDriver, cloudFoundryService, yarnAppManager, catalogConfig, kerberosService);
+        gearPumpSpawner = new GearPumpSpawner(gearPumpDriver, dashboardDeployer, yarnAppManager, catalogConfig, kerberosService);
     }
 
     @Test
@@ -79,13 +80,13 @@ public class GearPumpServiceSpawnerTest {
         when(gearPumpDriver.spawnGearPumpOnYarn(numberOfWorkers)).thenReturn(spawnResult);
 
         Map<String, String> dashboardData = getDashboardData();
-        when(cloudFoundryService.deployUI(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(dashboardData);
+        when(dashboardDeployer.deployUI(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(dashboardData);
 
         GearPumpCredentials returnedCredentials = gearPumpSpawner.provisionInstance(serviceInstanceId, spaceId, orgId, planId);
 
         verify(gearPumpDriver).spawnGearPumpOnYarn(numberOfWorkers);
-        verify(cloudFoundryService).deployUI(
-                eq("gearpump-ui-" + serviceInstanceId),
+        verify(dashboardDeployer).deployUI(
+                eq("gp-ui-" + serviceInstanceId),
                 eq("admin"),
                 anyString(),
                 eq(gearPumpCredentials.getMasters()),
@@ -138,7 +139,7 @@ public class GearPumpServiceSpawnerTest {
         SpawnResult spawnResult = new SpawnResult(SpawnResult.STATUS_OK, gearPumpCredentials, null);
         when(gearPumpDriver.spawnGearPumpOnYarn(numberOfWorkers)).thenReturn(spawnResult);
 
-        when(cloudFoundryService.deployUI(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        when(dashboardDeployer.deployUI(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
                 .thenThrow(new CloudFoundryServiceException(""));
 
         try {
@@ -156,13 +157,13 @@ public class GearPumpServiceSpawnerTest {
         gearPumpSpawner.deprovisionInstance(gearPumpCredentials);
 
         verify(yarnAppManager).killApplication(gearPumpCredentials.getYarnApplicationId());
-        verify(cloudFoundryService).undeployUI(anyString(), anyString());
+        verify(dashboardDeployer).undeployUI(anyString(), anyString());
     }
 
     @Test
     public void testDeprovisionInstance_success_nullCredentials() throws Exception {
         gearPumpSpawner.deprovisionInstance(null);
-        verifyZeroInteractions(yarnAppManager, cloudFoundryService);
+        verifyZeroInteractions(yarnAppManager, dashboardDeployer);
     }
 
     private Map<String, String> getDashboardData() {

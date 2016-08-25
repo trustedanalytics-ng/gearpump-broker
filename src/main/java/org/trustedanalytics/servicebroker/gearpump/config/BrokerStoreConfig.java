@@ -20,6 +20,7 @@ import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindi
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -29,7 +30,6 @@ import org.trustedanalytics.cfbroker.store.serialization.RepositorySerializer;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClientBuilder;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperStore;
-import org.trustedanalytics.hadoop.config.client.*;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
 
 import java.io.IOException;
@@ -58,6 +58,12 @@ public class BrokerStoreConfig {
     @Qualifier(Qualifiers.SERVICE_INSTANCE_BINDING)
     private RepositoryDeserializer<CreateServiceInstanceBindingRequest> bindingDeserializer;
 
+    @Value("${zookeeper.cluster}")
+    private String zookeeperCluster;
+
+    @Value("${zookeeper.node}")
+    private String zookeeperNode;
+
     public BrokerStoreConfig() {
         this.helper = new FactoryHelper();
     }
@@ -81,14 +87,11 @@ public class BrokerStoreConfig {
     @Bean
     @Profile("cloud")
     public ZookeeperClient getZKClient() throws IOException {
-        AppConfiguration appHelper = Configurations.newInstanceFromEnv();
-        ServiceInstanceConfiguration zooConf = appHelper.getServiceConfig(ServiceType.ZOOKEEPER_TYPE);
-
         ZookeeperClient zkClient = helper.getZkClientInstance(
-            zooConf.getProperty(Property.ZOOKEPER_URI).get(),
+            zookeeperCluster,
             kerberosProperties.getUser(),
             kerberosProperties.getPassword(),
-            zooConf.getProperty(Property.ZOOKEPER_ZNODE).get());
+            zookeeperNode);
         zkClient.init();
         return zkClient;
     }

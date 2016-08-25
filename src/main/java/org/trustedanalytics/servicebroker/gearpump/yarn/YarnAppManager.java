@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 @Configuration
@@ -51,7 +52,7 @@ public class YarnAppManager {
                 yarnClient.killApplication(getApplicationId(applicationId));
             } catch (ApplicationNotFoundException anfe) {
                 LOGGER.warn(String.format("Haven't found application %s. Assuming it was removed manually.", applicationId), anfe);
-            } catch (IOException e) {
+            } catch (IOException | LoginException e) {
                 throw new YarnException("YARN error during application removal.", e);
             }
         }
@@ -61,7 +62,7 @@ public class YarnAppManager {
         return new YarnAppIdParser(applicationId).getApplicationId();
     }
 
-    private YarnClient getYarnClient() {
+    private YarnClient getYarnClient() throws IOException, LoginException {
         return yarnClientFactory.getYarnClient();
     }
 }

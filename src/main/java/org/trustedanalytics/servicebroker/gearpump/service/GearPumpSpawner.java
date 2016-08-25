@@ -21,9 +21,13 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.trustedanalytics.servicebroker.gearpump.config.CatalogConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.CloudFoundryServiceException;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardDeployer;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardServiceException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.SpawnResult;
 import org.trustedanalytics.servicebroker.gearpump.yarn.YarnAppManager;
@@ -37,13 +41,14 @@ public class GearPumpSpawner {
     private static final String ADMIN_USERNAME = "admin";
 
     private final GearPumpDriverExec gearPumpDriver;
-    private final CloudFoundryService cloudFoundryService;
+    private final DashboardDeployer cloudFoundryService;
     private final YarnAppManager yarnAppManager;
     private final CatalogConfig configuration;
     private final KerberosService kerberosService;
 
+    @Autowired
     public GearPumpSpawner(GearPumpDriverExec gearPumpDriver,
-                           CloudFoundryService cloudFoundryService,
+                           DashboardDeployer cloudFoundryService,
                            YarnAppManager yarnAppManager,
                            CatalogConfig catalogConfig,
                            KerberosService kerberosService) {
@@ -67,11 +72,11 @@ public class GearPumpSpawner {
         }
     }
 
-    private void provisionOnCf(GearPumpCredentials gearPumpCredentials, String spaceId, String orgId, String serviceInstanceId)
+    private void provisionOnTap(GearPumpCredentials gearPumpCredentials, String spaceId, String orgId, String serviceInstanceId)
             throws DashboardServiceException, CloudFoundryServiceException {
-        LOGGER.info("Provisioning on Cloud Foundry");
+        LOGGER.info("Provisioning on TAP");
 
-        String uiServiceInstanceName = "gearpump-ui-" + serviceInstanceId;
+        String uiServiceInstanceName = "gp-ui-" + serviceInstanceId;
         String uaaClientName = RandomStringUtils.randomAlphanumeric(10).toLowerCase();
         String password = RandomStringUtils.randomAlphanumeric(10).toLowerCase();
 
@@ -106,15 +111,15 @@ public class GearPumpSpawner {
 
     public GearPumpCredentials provisionInstance(String serviceInstanceId, String spaceId, String orgId, String planId) throws Exception {
         LOGGER.info("Trying to provision gearPump for: " + serviceInstanceId);
-        kerberosService.logIn();
-
+        kerberosService.login();
         GearPumpCredentials credentials = null;
         try {
             credentials = provisionOnYarn(configuration.getNumberOfWorkers(planId));
             if (credentials != null) {
-                provisionOnCf(credentials, spaceId, orgId, serviceInstanceId);
+                provisionOnTap(credentials, spaceId, orgId, serviceInstanceId);
             }
         } catch (Exception e) {
+            LOGGER.error("Error occurred during provisioning", e);
             cleanUp(credentials);
             throw e;
         }

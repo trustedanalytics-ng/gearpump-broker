@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Deprecated
 @Service
 public class ResourceManagerService {
 

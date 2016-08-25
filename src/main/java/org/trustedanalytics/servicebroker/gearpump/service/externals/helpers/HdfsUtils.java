@@ -24,11 +24,11 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.trustedanalytics.hadoop.config.client.*;
-import org.trustedanalytics.hadoop.config.client.helper.Hdfs;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 
+import javax.annotation.PostConstruct;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.URI;
@@ -38,19 +38,24 @@ import java.net.URISyntaxException;
 public class HdfsUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(HdfsUtils.class);
 
-    private final FileSystem hdfsFs;
-    private final String hdfsUri;
+    private FileSystem hdfsFs;
+
+    @Value("${hdfs.uri}")
+    private String hdfsUri;
 
     private final KerberosService kerberosService;
-    private final ServiceInstanceConfiguration helper;
+
+    private final Configuration hadoopConfiguration;
 
     @Autowired
-    public HdfsUtils(KerberosService kerberosService) throws IOException, LoginException, InterruptedException, URISyntaxException {
-        LOGGER.info("=-=========================== create hdfs filesystem");
+    public HdfsUtils(KerberosService kerberosService, Configuration hadoopConfiguration) {
         this.kerberosService = kerberosService;
-        helper = Configurations.newInstanceFromEnv().getServiceConfig(ServiceType.HDFS_TYPE);
+        this.hadoopConfiguration = hadoopConfiguration;
+    }
 
-        hdfsUri = helper.getProperty(Property.HDFS_URI).get();
+    @PostConstruct
+    public void init() throws LoginException, URISyntaxException, InterruptedException, IOException {
+        LOGGER.info("=-=========================== create hdfs filesystem");
         hdfsFs = createHdfsFs();
 
         LOGGER.info("hdfsUri + " + hdfsUri);
@@ -58,13 +63,12 @@ public class HdfsUtils {
     }
 
     private FileSystem createHdfsFs() throws IOException, LoginException, InterruptedException, URISyntaxException {
-        if (kerberosService.isKerberosEnabled()) {
-            return Hdfs.newInstance().createFileSystem();
-        } else {
-            Configuration hadoopConf = helper.asHadoopConfiguration();
-            String user = kerberosService.getKerberosUser();
-            return FileSystem.get(new URI(hdfsUri), hadoopConf, user);
-        }
+        LOGGER.info("create filesystem");
+        kerberosService.login();
+        LOGGER.info("logged in");
+        String user = kerberosService.getKerberosProperties().getUser();
+        URI hdfsUri = new URI(this.hdfsUri);
+        return FileSystem.get(hdfsUri, hadoopConfiguration, user);
     }
 
     public boolean exists(String name) throws IOException {

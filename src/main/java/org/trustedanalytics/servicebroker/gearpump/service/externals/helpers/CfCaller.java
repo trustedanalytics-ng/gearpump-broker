@@ -18,15 +18,26 @@ package org.trustedanalytics.servicebroker.gearpump.service.externals.helpers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriTemplate;
 
 import java.io.IOException;
+import java.net.URI;
 
-public final class CfCaller {
+public class CfCaller {
 
-    private static ObjectMapper MAPPER = new ObjectMapper();
+    public static final Logger LOGGER = LoggerFactory.getLogger(CfCaller.class);
+
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String CONTENT_TYPE_HEADER = "Content-Type";
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private RestTemplate restTemplate;
 
@@ -61,4 +72,25 @@ public final class CfCaller {
         JsonNode root = MAPPER.readTree(json);
         return root.at(valuePath).asText();
     }
+
+    public JsonNode getRoot(String json) throws IOException {
+        return MAPPER.readTree(json);
+    }
+
+    public ResponseEntity<String> execute(String url, HttpMethod method, String body, Object... urlVariables) {
+        return this.executeWithHeaders(url, method, body, new HttpHeaders(), urlVariables);
+    }
+
+    public ResponseEntity<String> executeWithHeaders(String url, HttpMethod method, String body, HttpHeaders headers, Object... urlVariables) {
+        RestTemplate restTemplate = createRestTemplate();
+        HttpEntity<String> request = createJsonRequest(body, headers);
+        URI expanded = (new UriTemplate(url)).expand(urlVariables);
+        LOGGER.info("Performing call: {}", expanded.toString());
+        ResponseEntity<String> response = restTemplate.exchange(url, method, request, String.class, urlVariables);
+        assert response != null;
+        LOGGER.debug("Response status: {}", response.getStatusCode());
+        LOGGER.debug("Response: {}", response);
+        return response;
+    }
+
 }

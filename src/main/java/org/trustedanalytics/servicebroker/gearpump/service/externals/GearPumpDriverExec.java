@@ -27,9 +27,7 @@ import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutorResult;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.HdfsUtils;
-import org.trustedanalytics.servicebroker.gearpump.service.file.ResourceManagerService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,9 +45,6 @@ public class GearPumpDriverExec {
     private GearPumpOutputReportReader gearPumpOutputReportReader;
 
     @Autowired
-    private ResourceManagerService resourceManagerService;
-
-    @Autowired
     private GearPumpSpawnerConfig gearPumpSpawnerConfig;
 
     @Autowired
@@ -61,22 +56,10 @@ public class GearPumpDriverExec {
     @Autowired
     private KerberosService kerberosService;
 
-    private String destDir;
-
-    private String getDestDir() {
-        try {
-            return resourceManagerService.getRealPath(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
-        } catch (IOException e) {
-            LOGGER.debug("Swallowing exception while getting destDir.", e);
-            return null;
-        }
-    }
     public SpawnResult spawnGearPumpOnYarn(String numberOfWorkers)  {
         LOGGER.info("spawnGearPumpOnYarn numberOfWorkers = [" + numberOfWorkers + "]");
 
-        destDir = getDestDir();
-
-        String outputReportFilePath = createOutputReportFilePath(destDir);
+        String outputReportFilePath = createOutputReportFilePath(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
 
         String yarnApplicationId = null;
         String mastersUrl = null;
@@ -119,7 +102,7 @@ public class GearPumpDriverExec {
     private ExternalProcessExecutorResult deployGearPumpOnYarn(String outputReportFilePath, String numberOfWorkers) {
         String[] command = getGearPumpYarnCommand(outputReportFilePath);
         Map<String, String> envProperties = getEnvForProcessBuilder(numberOfWorkers, gearPumpSpawnerConfig.getWorkersMemoryLimit());
-        return externalProcessExecutor.run(command, destDir, envProperties);
+        return externalProcessExecutor.run(command, gearPumpSpawnerConfig.getGearPumpDestinationFolder(), envProperties);
     }
 
     private String[] getGearPumpYarnCommand(String outputReportFilePath) {

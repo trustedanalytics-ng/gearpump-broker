@@ -16,33 +16,53 @@
 
 package org.trustedanalytics.servicebroker.gearpump.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.trustedanalytics.hadoop.config.client.*;
+import org.trustedanalytics.hadoop.kerberos.KrbLoginManager;
+import org.trustedanalytics.hadoop.kerberos.KrbLoginManagerFactory;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
-import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
 @Configuration
 public class KerberosConfig {
 
+    @Value("${kerberos.enabled:false}")
+    @NotNull
+    private boolean enabled;
+
+    @Value("${kerberos.kdc:}")
+    @NotNull
+    private String kdc;
+
+    @Value("${kerberos.realm:}")
+    @NotNull
+    private String realm;
+
+    @Value("${kerberos.user:}")
+    @NotNull
+    private String user;
+
+    @Value("${kerberos.password:}")
+    @NotNull
+    private String password;
+
     @Bean
     public KerberosProperties getKerberosProperties() throws IOException {
-        AppConfiguration helper = Configurations.newInstanceFromEnv();
-        ServiceInstanceConfiguration krbConf = helper.getServiceConfig(ServiceType.KERBEROS_TYPE);
-
         KerberosProperties krbProps = new KerberosProperties();
-        krbProps.setKdc(krbConf.getProperty(Property.KRB_KDC).get());
-        krbProps.setRealm(krbConf.getProperty(Property.KRB_REALM).get());
-        krbProps.setUser(krbConf.getProperty(Property.USER).get());
-        krbProps.setPassword(krbConf.getProperty(Property.PASSWORD).get());
-
+        krbProps.setKdc(kdc);
+        krbProps.setRealm(realm);
+        krbProps.setUser(user);
+        krbProps.setPassword(password);
+        krbProps.setKerberosEnabled(enabled);
         return krbProps;
     }
 
     @Bean
-    public KerberosService kerberosService() throws IOException {
-        return new KerberosService(getKerberosProperties());
+    public KrbLoginManager loginManager() {
+        return KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
     }
+
 }

@@ -5,59 +5,72 @@ PROJECT_NAME=$(basename $(pwd))
 PACKAGE_CATALOG=$PROJECT_NAME-$VERSION
 JAR_NAME="$PACKAGE_CATALOG.jar"
 
-# GEARPUMP BROKER
+############################ GEARPUMP BROKER #############################
+
+GEARPUMP_BROKER_FILE_ARCHIVE=$PACKAGE_CATALOG.tar.gz
+
+if [ -e $GEARPUMP_BROKER_FILE_ARCHIVE ] ; then
+    echo "Package $GEARPUMP_BROKER_FILE_ARCHIVE already exists. Exiting."
+    exit 0
+fi
+
 # download gearpump binaries
 GEARPUMP_PACK_FULL_VER=$(cat src/cloudfoundry/manifest.yml | grep GEARPUMP_PACK_VERSION | cut -d ' ' -f 6- | sed 's/["]//g')
 GEARPUMP_PACK_SHORT_VER=$(echo $GEARPUMP_PACK_FULL_VER | cut -d '-' -f 2-)
-GEARPUMP_RESOURCES_PATH=src/main/resources/gearpump
-wget "https://github.com/gearpump/gearpump/releases/download/$GEARPUMP_PACK_SHORT_VER/gearpump-$GEARPUMP_PACK_FULL_VER.zip" -P $GEARPUMP_RESOURCES_PATH
+GEARPUMP_FOLDER=gearpump-$GEARPUMP_PACK_FULL_VER
+GEARPUMP_FILE_ZIP=$GEARPUMP_FOLDER.zip
+
+if [ -e $GEARPUMP_FILE_ZIP ] ; then
+    echo "Package $GEARPUMP_FILE_ZIP already downloaded."
+else
+    echo "Downloading $GEARPUMP_FILE_ZIP..."
+    curl --location --retry 3 --insecure https://github.com/gearpump/gearpump/releases/download/$GEARPUMP_PACK_SHORT_VER/$GEARPUMP_FILE_ZIP -o $GEARPUMP_FILE_ZIP
+fi
 
 # build project
-mvn clean install -Dmaven.test.skip=true
+mvn clean install
 
 # create tmp catalog
+rm -rf $PACKAGE_CATALOG
 mkdir $PACKAGE_CATALOG
 
 # files to package
+cp $GEARPUMP_FILE_ZIP $PACKAGE_CATALOG
+cp scripts/run.sh $PACKAGE_CATALOG
 cp src/cloudfoundry/manifest.yml $PACKAGE_CATALOG
-cp --parents target/$JAR_NAME $PACKAGE_CATALOG
+cp target/$JAR_NAME $PACKAGE_CATALOG
 
 # prepare build manifest
 echo "commit_sha=$(git rev-parse HEAD)" > $PACKAGE_CATALOG/build_info.ini
 
 # create zip package
 cd $PACKAGE_CATALOG
-zip -r ../$PROJECT_NAME-$VERSION.zip *
+tar -zcf ../$GEARPUMP_BROKER_FILE_ARCHIVE *
 cd ..
 
 # remove tmp catalog
 rm -r $PACKAGE_CATALOG
 
-echo "Zip package for $PROJECT_NAME project in version $VERSION has been prepared."
+echo "tar.gz package for $PROJECT_NAME project in version $VERSION has been prepared."
 
 ############################ GEARPUMP DASHBOARD #############################
 TMP_CATALOG=/tmp/gearpump-binaries
-TMP_ARCHIVE_CATALOG=tmp
+
+rm -rf $TMP_CATALOG
 mkdir -p $TMP_CATALOG
-unzip $GEARPUMP_RESOURCES_PATH/gearpump-$GEARPUMP_PACK_FULL_VER.zip -d $TMP_CATALOG
+
+unzip $GEARPUMP_FILE_ZIP -d $TMP_CATALOG
+
 cd scripts
-./prepare.sh $TMP_CATALOG/gearpump-$GEARPUMP_PACK_FULL_VER $TMP_CATALOG
+./prepare.sh $TMP_CATALOG/$GEARPUMP_FOLDER $TMP_CATALOG
+
 cd ..
 
 # prepare files to archive
-mkdir -p tmp/target
-cp $TMP_CATALOG/target/gearpump-dashboard.zip $TMP_ARCHIVE_CATALOG/target/
-cp $TMP_CATALOG/manifest.yml $TMP_ARCHIVE_CATALOG/
+mv $TMP_CATALOG/target/gearpump-dashboard.tar.gz gearpump-dashboard-${VERSION}.tar.gz
 echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
-
-# create artifact
-cd $TMP_ARCHIVE_CATALOG
-zip -r ../gearpump-dashboard-${VERSION}.zip *
-cd ..
 
 # clean temporary data
 rm -r $TMP_CATALOG
-rm -r $TMP_ARCHIVE_CATALOG
 
-echo "Zip package for gearpump-dashboard project in version $VERSION has been prepared."
-
+echo "tar.gz package for gearpump-dashboard project in version $VERSION has been prepared."
