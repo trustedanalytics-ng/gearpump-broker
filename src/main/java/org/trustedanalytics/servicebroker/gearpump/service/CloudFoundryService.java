@@ -228,7 +228,7 @@ public class CloudFoundryService {
     }
 
     private String loginHost() {
-        return loginApiEndpoint.replaceAll("/oauth/authorize", "");
+        return loginApiEndpoint;
     }
 
     private void deleteUIServiceInstance(String uiServiceGuid) {

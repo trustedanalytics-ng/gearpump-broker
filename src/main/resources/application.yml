@@ -45,7 +45,7 @@ api.endpoint: ${vcap.services.sso.credentials.apiEndpoint:}
 uaa:
   endpoint: ${vcap.services.sso.credentials.uaaUri:}
   token_uri: ${vcap.services.sso.credentials.tokenUri:}
-  login_uri: ${vcap.services.sso.credentials.authorizationUri:}
+  login_uri: ${vcap.services.sso.credentials.uaaUri:}
   admin_client:
     id: ${vcap.services.sso.credentials.clientId:}
     secret: ${vcap.services.sso.credentials.clientSecret:}
