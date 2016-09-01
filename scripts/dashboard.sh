@@ -164,16 +164,15 @@ i=0
 for index in "${toFind[@]}"
 do
     echo "${index} -> ${toReplace[i]}"
-    sed -i -e "s|${index}|${toReplace[i]}|g" $APP_HOME/lib/gear.conf
+    sed -i -e "s|${index}|${toReplace[i]}|g" $APP_HOME/conf/gear.conf
     i=$((i+1))
 done
 
 # change the port
-sed -i "s/8090/${PORT}/g" $APP_HOME/lib/gear.conf
+sed -i "s/8090/${PORT}/g" $APP_HOME/conf/gear.conf
 
 # enable authentication
-sed -i "s/authentication-enabled = false/authentication-enabled = true/" $APP_HOME/lib/gear.conf
-## TODO: can be moved to prepare.sh when we decide to enable security by default
+sed -i "s/authentication-enabled = false/authentication-enabled = true/" $APP_HOME/conf/gear.conf
 
 ###########################
 # Run dshboard

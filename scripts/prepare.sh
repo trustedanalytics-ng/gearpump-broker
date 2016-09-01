@@ -41,25 +41,27 @@ fi
 
 mkdir $DEST_DIR/bin
 mkdir $DEST_DIR/lib
+mkdir $DEST_DIR/lib/daemon
+mkdir $DEST_DIR/lib/services
+mkdir $DEST_DIR/conf
+mkdir $DEST_DIR/dashboard
 
 # copy dependencies
-cp $GP_HOME/conf/* $DEST_DIR/lib
-cp -r $GP_HOME/dashboard/* $DEST_DIR/lib
+cp $GP_HOME/conf/* $DEST_DIR/conf
+cp -r $GP_HOME/dashboard/* $DEST_DIR/dashboard
 cp $GP_HOME/lib/* $DEST_DIR/lib
-cp $GP_HOME/lib/daemon/* $DEST_DIR/lib
-cp $GP_HOME/lib/services/* $DEST_DIR/lib
+cp $GP_HOME/lib/daemon/* $DEST_DIR/lib/daemon
+cp $GP_HOME/lib/services/* $DEST_DIR/lib/services
 cp $GP_HOME/VERSION $DEST_DIR/lib/
 cp $GP_HOME/VERSION $DEST_DIR/
 
 # compute classpath
 CP_STRING=""
-JAR_PREFIX=\$APP_HOME/lib
+JAR_PREFIX=\$APP_HOME
 
-for filename in $DEST_DIR/lib/*.jar; do
-	CP_STRING+=$JAR_PREFIX/$(basename $filename):
-done
+CP_STRING+=$JAR_PREFIX/lib:$JAR_PREFIX/lib/*:$JAR_PREFIX/lib/services:$JAR_PREFIX/lib/services/*:$JAR_PREFIX/lib/daemon:$JAR_PREFIX/lib/daemon/*:
+CP_STRING+=$JAR_PREFIX/dashboard/:$JAR_PREFIX/dashboard/*:$JAR_PREFIX/conf/:$JAR_PREFIX/conf/*
 
-CP_STRING+=$JAR_PREFIX:$JAR_PREFIX/*
 echo $CP_STRING
 
 #copy starting script
@@ -77,4 +79,4 @@ cp dashboard-manifest.yml $DEST_DIR/manifest.yml
 cd $DEST_DIR/
 #make zip in target directory
 mkdir target/
-zip -r target/gearpump-dashboard.zip bin/ lib/ VERSION
+zip -r target/gearpump-dashboard.zip bin/ lib/ conf/ dashboard/ VERSION
