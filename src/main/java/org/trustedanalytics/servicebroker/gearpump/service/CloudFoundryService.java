@@ -234,6 +234,7 @@ public class CloudFoundryService {
     private void deleteUIServiceInstance(String uiServiceGuid) {
         try {
             execute(DELETE_SERVICE_URL, HttpMethod.DELETE, "", cfApiEndpoint, uiServiceGuid);
+            LOGGER.debug("GearPump dashboard instance has been deleted");
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 LOGGER.warn("GearPump UI instance with GUID {} doesn't exist. Skipping.", uiServiceGuid);

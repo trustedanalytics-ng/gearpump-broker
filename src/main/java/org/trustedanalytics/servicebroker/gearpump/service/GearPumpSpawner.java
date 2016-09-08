@@ -125,11 +125,14 @@ public class GearPumpSpawner {
     public void deprovisionInstance(GearPumpCredentials gearPumpCredentials) throws YarnException, DashboardServiceException {
         LOGGER.info("deprovisionInstance {}", gearPumpCredentials);
         if (gearPumpCredentials != null) {
-            yarnAppManager.killApplication(gearPumpCredentials.getYarnApplicationId());
-            LOGGER.debug("GearPump instance on Yarn has been deleted: {}", gearPumpCredentials.getYarnApplicationId());
+            if (gearPumpCredentials.getYarnApplicationId() != null) {
+                yarnAppManager.killApplication(gearPumpCredentials.getYarnApplicationId());
+                LOGGER.debug("GearPump instance on Yarn has been deleted: {}", gearPumpCredentials.getYarnApplicationId());
+            } else {
+                LOGGER.debug("Yarn Application ID is NULL!");
+            }
 
             cloudFoundryService.undeployUI(gearPumpCredentials.getDashboardGuid(), gearPumpCredentials.getUaaClientName());
-            LOGGER.debug("GearPump instance on Yarn has been deleted: {}", gearPumpCredentials.getYarnApplicationId());
         }
     }
 }
