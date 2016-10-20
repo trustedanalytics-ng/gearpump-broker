@@ -19,6 +19,9 @@
         <jacoco-measurement-branches>0.36</jacoco-measurement-branches>
         <jacoco-measurement-lines>0.46</jacoco-measurement-lines>
         <jacoco-measurement-classes>0.46</jacoco-measurement-classes>
+        <docker.imageName>${project.artifactId}</docker.imageName>
+        <docker.registry>tapimages.us.enableiot.com:8080</docker.registry>
+        <docker.workdir>/opt/app</docker.workdir>
     </properties>
 
     <build>
@@ -33,6 +36,35 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.4.12</version>
+                <configuration>
+                    <imageName>${docker.imageName}</imageName>
+                    <baseImage>${docker.registry}/tap-base-java:java8-jessie</baseImage>
+                    <useConfigFile>true</useConfigFile>
+                    <env>
+                        <SERVER_PORT>80</SERVER_PORT>
+                        <GEARPUMP_BROKER_VERSION>${project.version}</GEARPUMP_BROKER_VERSION>
+                    </env>
+                    <exposes>
+                        <expose>80</expose>
+                    </exposes>
+                    <runs>
+                        <run>mkdir -p ${docker.workdir}</run>
+                    </runs>
+                    <workdir>${docker.workdir}</workdir>
+                    <resources>
+                        <resource>
+                            <targetPath>.</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.tar.gz</include>
+                        </resource>
+                    </resources>
+                    <cmd>./run.sh</cmd>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

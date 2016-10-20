@@ -1,15 +1,33 @@
+#
+# Copyright (c) 2016 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 set -e
 
-VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | tail -1)
-PROJECT_NAME=$(basename $(pwd))
-PACKAGE_CATALOG=$PROJECT_NAME-$VERSION
-JAR_NAME="$PACKAGE_CATALOG.jar"
+VERSION=0.8.2
+PROJECT_NAME=gearpump-broker
+PACKAGE_NAME=$PROJECT_NAME-$VERSION
+JAR_NAME="$PACKAGE_NAME.jar"
+PACKAGE_CATALOG="target/$PACKAGE_NAME"
 
 ############################ GEARPUMP BROKER #############################
 
-GEARPUMP_BROKER_FILE_ARCHIVE=$PACKAGE_CATALOG.tar.gz
+GEARPUMP_BROKER_FILE_ARCHIVE=$PACKAGE_NAME.tar.gz
+GEARPUMP_BROKER_FILE_ARCHIVE_FULL_PATH=$PACKAGE_CATALOG/$PACKAGE_NAME.tar.gz
 
-if [ -e $GEARPUMP_BROKER_FILE_ARCHIVE ] ; then
+if [ -e $GEARPUMP_BROKER_FILE_ARCHIVE_FULL_PATH ] ; then
     echo "Package $GEARPUMP_BROKER_FILE_ARCHIVE already exists. Exiting."
     exit 0
 fi
@@ -26,9 +44,6 @@ else
     echo "Downloading $GEARPUMP_FILE_ZIP..."
     curl --location --retry 3 --insecure https://github.com/gearpump/gearpump/releases/download/$GEARPUMP_PACK_SHORT_VER/$GEARPUMP_FILE_ZIP -o $GEARPUMP_FILE_ZIP
 fi
-
-# build project
-mvn clean install
 
 # create tmp catalog
 rm -rf $PACKAGE_CATALOG
@@ -49,28 +64,8 @@ tar -zcf ../$GEARPUMP_BROKER_FILE_ARCHIVE *
 cd ..
 
 # remove tmp catalog
-rm -r $PACKAGE_CATALOG
+rm -r $PACKAGE_NAME
 
 echo "tar.gz package for $PROJECT_NAME project in version $VERSION has been prepared."
 
-############################ GEARPUMP DASHBOARD #############################
-TMP_CATALOG=/tmp/gearpump-binaries
 
-rm -rf $TMP_CATALOG
-mkdir -p $TMP_CATALOG
-
-unzip $GEARPUMP_FILE_ZIP -d $TMP_CATALOG
-
-cd scripts
-./prepare.sh $TMP_CATALOG/$GEARPUMP_FOLDER $TMP_CATALOG
-
-cd ..
-
-# prepare files to archive
-mv $TMP_CATALOG/target/gearpump-dashboard.tar.gz gearpump-dashboard-${VERSION}.tar.gz
-echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
-
-# clean temporary data
-rm -r $TMP_CATALOG
-
-echo "tar.gz package for gearpump-dashboard project in version $VERSION has been prepared."
