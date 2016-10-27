@@ -55,7 +55,7 @@
                 "containers": [
                   {
                     "name": "gearpump-broker",
-                    "image": "127.0.0.1:30000/gearpump-broker:0.1.5",
+                    "image": "127.0.0.1:30000/gearpump-broker:0.1.0",
                     "volumeMounts": [
                       {
                         "mountPath": "/etc/hadoop",

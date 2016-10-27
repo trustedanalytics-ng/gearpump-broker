@@ -16,6 +16,9 @@
 
 package org.trustedanalytics.servicebroker.gearpump.config;
 
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +33,17 @@ import org.trustedanalytics.cfbroker.store.serialization.RepositorySerializer;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClientBuilder;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperStore;
+import org.trustedanalytics.hadoop.kerberos.KrbLoginManager;
+import org.trustedanalytics.hadoop.kerberos.KrbLoginManagerFactory;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
+import sun.security.krb5.KrbException;
 
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class BrokerStoreConfig {
@@ -87,18 +98,55 @@ public class BrokerStoreConfig {
     @Bean
     @Profile("cloud")
     public ZookeeperClient getZKClient() throws IOException {
-        ZookeeperClient zkClient = helper.getZkClientInstance(
-            zookeeperCluster,
-            kerberosProperties.getUser(),
-            kerberosProperties.getPassword(),
-            zookeeperNode);
+        ZookeeperClient zkClient;
+
+        if(kerberosProperties.isKerberosEnabled()) {
+            zkClient = helper.getSecureZkClientInstance(
+                    zookeeperCluster,
+                    kerberosProperties.getUser(),
+                    kerberosProperties.getPassword(),
+                    kerberosProperties.getKdc(),
+                    kerberosProperties.getRealm(),
+                    zookeeperNode
+            );
+        } else {
+            zkClient = helper.getInsecureZkClientInstance(
+                    zookeeperCluster,
+                    kerberosProperties.getUser(),
+                    kerberosProperties.getPassword(),
+                    zookeeperNode
+            );
+        }
         zkClient.init();
         return zkClient;
     }
 
     static final class FactoryHelper {
-        ZookeeperClient getZkClientInstance(String zkCluster, String user, String pass, String zkNode) throws IOException {
-            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).build();
+        ZookeeperClient getSecureZkClientInstance(String zkCluster, String user, String pass, String kdc, String realm, String zkNode) throws IOException {
+            KrbLoginManager loginManager = KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
+
+            System.setProperty("zookeeper.sasl.clientconfig", user);
+
+            try {
+                loginManager.loginWithCredentials(user, pass.toCharArray());
+            } catch (LoginException e) {
+                e.printStackTrace();
+            }
+
+            List<ACL> acl = Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("sasl", user)));
+            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(acl).build();
+        }
+
+        ZookeeperClient getInsecureZkClientInstance(String zkCluster, String user, String pass, String zkNode) throws IOException {
+            String digest = null;
+            try {
+                digest = DigestAuthenticationProvider.generateDigest(String.format("%s:%s", user, pass));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+
+            List<ACL> acl = Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("digest", digest)));
+            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(acl).build();
         }
     }
 }

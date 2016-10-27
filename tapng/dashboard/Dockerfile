@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-FROM tapimages.us.enableiot.com:8080/tap-base-java:java8-jessie
+FROM localhost:30000/tap-base-java:java8-jessie
 MAINTAINER Pawel Procaj <pawelx.procaj@intel.com>
 
 ENV APP_ROOT="/opt/app" \
