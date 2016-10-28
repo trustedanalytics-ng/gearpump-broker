@@ -14,5 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export KRB5CCNAME="/tmp/${HADOOP_USER_NAME}@CLOUDERA"
+
 env
 exec java -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar

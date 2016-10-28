@@ -107,7 +107,12 @@
                       { "name": "HDFS_DIR", "value": "/user/gearpump" },
                       { "name": "HADOOP_CONF_DIR", "value": "/etc/hadoop" },
                       { "name": "HADOOP_HOME", "value": "/etc/hadoop" },
-                      { "name": "HADOOP_USER_NAME", "value": "cf" },
+                      {
+                        "name": "HADOOP_USER_NAME",
+                        "valueFrom": {
+                          "configMapKeyRef": { "name": "broker-config", "key": "broker.system.user" }
+                        }
+                      },
 
                       { "name": "TAP_API_ENDPOINT", "value": "http://api.$domain_name" },
 
@@ -131,7 +136,10 @@
                       {
                         "name": "KRB_PASSWORD",
                         "valueFrom": {
-                          "configMapKeyRef": { "name": "kerberos-config", "key": "krb.password" }
+                          "secretKeyRef": {
+                            "name": "broker-passwords",
+                            "key": "broker.kerberos.user.password"
+                          }
                         }
                       },
                       {
@@ -143,7 +151,7 @@
                       {
                         "name": "KRB_USER",
                         "valueFrom": {
-                          "configMapKeyRef": { "name": "kerberos-config", "key": "krb.user" }
+                          "configMapKeyRef": { "name": "broker-config", "key": "broker.system.user" }
                         }
                       },
                       {
@@ -154,7 +162,6 @@
                       },
                       { "name": "JAVA_SECURITY_KRB5_CONF", "value": "/etc/kerberos/krb5.conf" },
                       { "name": "KRB5_CONFIG", "value": "/etc/kerberos/krb5.conf" },
-                      { "name": "KRB5CCNAME", "value": "/tmp/cf@CLOUDERA" },
 
                       {
                         "name": "ZK_CLUSTER",

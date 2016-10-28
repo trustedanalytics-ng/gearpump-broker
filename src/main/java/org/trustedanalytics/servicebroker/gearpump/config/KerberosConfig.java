@@ -62,7 +62,7 @@ public class KerberosConfig {
 
     @Bean
     public KrbLoginManager loginManager() {
-        return KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
+        return enabled ? KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm) : null;
     }
 
 }
