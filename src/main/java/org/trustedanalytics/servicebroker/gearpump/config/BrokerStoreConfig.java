@@ -124,29 +124,21 @@ public class BrokerStoreConfig {
     static final class FactoryHelper {
         ZookeeperClient getSecureZkClientInstance(String zkCluster, String user, String pass, String kdc, String realm, String zkNode) throws IOException {
             KrbLoginManager loginManager = KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
-
-            System.setProperty("zookeeper.sasl.clientconfig", user);
-
-            try {
-                loginManager.loginWithCredentials(user, pass.toCharArray());
-            } catch (LoginException e) {
-                e.printStackTrace();
-            }
-
-            List<ACL> acl = Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("sasl", user)));
-            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(acl).build();
+            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(getAcl(user, pass)).build();
         }
 
         ZookeeperClient getInsecureZkClientInstance(String zkCluster, String user, String pass, String zkNode) throws IOException {
+            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(getAcl(user, pass)).build();
+        }
+
+        private List<ACL> getAcl(String user, String pass) {
             String digest = null;
             try {
                 digest = DigestAuthenticationProvider.generateDigest(String.format("%s:%s", user, pass));
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
-
-            List<ACL> acl = Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("digest", digest)));
-            return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(acl).build();
+            return Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("digest", digest)));
         }
     }
 }
