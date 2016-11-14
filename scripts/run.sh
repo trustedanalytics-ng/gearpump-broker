@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export KRB5CCNAME="/tmp/${HADOOP_USER_NAME}@CLOUDERA"
+USER_DIR=$(echo ${HADOOP_USER_NAME} | sed 's|/|_|')
+export KRB5CCNAME="/tmp/${USER_DIR}@CLOUDERA"
 
 env
 exec java -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar
