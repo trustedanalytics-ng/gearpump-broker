@@ -21,6 +21,8 @@ import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,9 +39,6 @@ import org.trustedanalytics.hadoop.kerberos.KrbLoginManager;
 import org.trustedanalytics.hadoop.kerberos.KrbLoginManagerFactory;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
-import sun.security.krb5.KrbException;
-
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -50,6 +49,7 @@ public class BrokerStoreConfig {
 
     @Autowired
     private KerberosProperties kerberosProperties;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerStoreConfig.class);
 
     private FactoryHelper helper;
 
@@ -97,7 +97,7 @@ public class BrokerStoreConfig {
 
     @Bean
     @Profile("cloud")
-    public ZookeeperClient getZKClient() throws IOException {
+    public ZookeeperClient getZKClient() throws IOException, NoSuchAlgorithmException {
         ZookeeperClient zkClient;
 
         if(kerberosProperties.isKerberosEnabled()) {
@@ -122,22 +122,17 @@ public class BrokerStoreConfig {
     }
 
     static final class FactoryHelper {
-        ZookeeperClient getSecureZkClientInstance(String zkCluster, String user, String pass, String kdc, String realm, String zkNode) throws IOException {
+        ZookeeperClient getSecureZkClientInstance(String zkCluster, String user, String pass, String kdc, String realm, String zkNode) throws IOException, NoSuchAlgorithmException {
             KrbLoginManager loginManager = KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
             return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(getAcl(user, pass)).build();
         }
 
-        ZookeeperClient getInsecureZkClientInstance(String zkCluster, String user, String pass, String zkNode) throws IOException {
+        ZookeeperClient getInsecureZkClientInstance(String zkCluster, String user, String pass, String zkNode) throws IOException, NoSuchAlgorithmException {
             return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(getAcl(user, pass)).build();
         }
 
-        private List<ACL> getAcl(String user, String pass) {
-            String digest = null;
-            try {
-                digest = DigestAuthenticationProvider.generateDigest(String.format("%s:%s", user, pass));
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
+        private List<ACL> getAcl(String user, String pass) throws NoSuchAlgorithmException {
+            String digest = DigestAuthenticationProvider.generateDigest(String.format("%s:%s", user, pass));
             return Arrays.asList(new ACL(ZooDefs.Perms.ALL, new Id("digest", digest)));
         }
     }

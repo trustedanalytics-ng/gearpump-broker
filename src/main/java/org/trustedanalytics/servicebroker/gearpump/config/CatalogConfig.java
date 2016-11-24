@@ -52,7 +52,8 @@ public class CatalogConfig {
     private static final String DISPLAY_NAME = "displayName";
     private static final String DISPLAY_NAME_VALUE = "Apache Gearpump";
     private static final String SYSLOG_DRAIN = "syslog_drain";
-
+    private static final String GEARPUMP_PLAN_PREFIX = "gearpump-";
+    private static final String[] GEARPUMP_PLANS = {"small", "medium"};
     @Bean
     public Catalog catalog() {
         return new Catalog(Arrays.asList(new ServiceDefinition(getCfServiceId(), getCfServiceName(),
@@ -60,25 +61,31 @@ public class CatalogConfig {
                 Arrays.asList("data-science-tool"), getServiceDefinitionMetadata(), Arrays.asList(SYSLOG_DRAIN), null)));
     }
 
-    public String getNumberOfWorkers(String planId) {
-        return planId.replaceAll("(.*)-workers-", "");
+    public String getNumberOfWorkers(String planName) {
+        if(planName.equalsIgnoreCase(GEARPUMP_PLAN_PREFIX.concat(GEARPUMP_PLANS[0]))) {
+            return "1";
+        }
+        if(planName.equalsIgnoreCase(GEARPUMP_PLAN_PREFIX.concat(GEARPUMP_PLANS[1]))) {
+            return "3";
+        }
+
+        return "1";
     }
 
     private List<Plan> getGearPumpPlans() {
-        return ImmutableList.of(1, 2, 3)
+        return ImmutableList.copyOf(GEARPUMP_PLANS)
                 .stream()
                 .map(x -> "" + x)
                 .map(this::createPlan)
                 .collect(Collectors.toList());
     }
 
-    private Plan createPlan(String numberOfWorkers) {
-        String workerPlural = "1".equals(numberOfWorkers) ? " worker" : " workers";
+    private Plan createPlan(String planName) {
         return new Plan(
-                getCfBaseId() + "-workers-" + numberOfWorkers,
-                numberOfWorkers + workerPlural,
-                "Run GearPump with " + numberOfWorkers + workerPlural,
-                ImmutableMap.of("numberOfWorkers", (Object) numberOfWorkers),
+                getCfBaseId() + "-" + planName,
+                planName,
+                "Run Gearpump with " + getNumberOfWorkers(planName),
+                ImmutableMap.of("planName", (Object) planName),
                 true
         );
     }
