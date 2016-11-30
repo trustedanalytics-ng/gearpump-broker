@@ -123,7 +123,7 @@ public class BrokerStoreConfig {
 
     static final class FactoryHelper {
         ZookeeperClient getSecureZkClientInstance(String zkCluster, String user, String pass, String kdc, String realm, String zkNode) throws IOException, NoSuchAlgorithmException {
-            KrbLoginManager loginManager = KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
+            KrbLoginManagerFactory.getInstance().getKrbLoginManagerInstance(kdc, realm);
             return new ZookeeperClientBuilder(zkCluster, user, pass, zkNode).withRootCreation(getAcl(user, pass)).build();
         }
 
