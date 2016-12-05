@@ -15,10 +15,10 @@
         <brokerVersion>2.6.0</brokerVersion>
         <brokerTestVersion>2.6.0</brokerTestVersion>
         <start-class>org.trustedanalytics.servicebroker.gearpump.Application</start-class>
-        <jacoco-measurement-instructions>0.45</jacoco-measurement-instructions>
-        <jacoco-measurement-branches>0.36</jacoco-measurement-branches>
-        <jacoco-measurement-lines>0.46</jacoco-measurement-lines>
-        <jacoco-measurement-classes>0.46</jacoco-measurement-classes>
+        <jacoco-measurement-instructions>0.47</jacoco-measurement-instructions>
+        <jacoco-measurement-branches>0.40</jacoco-measurement-branches>
+        <jacoco-measurement-lines>0.49</jacoco-measurement-lines>
+        <jacoco-measurement-classes>0.48</jacoco-measurement-classes>
         <docker.imageName>${project.artifactId}</docker.imageName>
         <docker.registry>tapimages.us.enableiot.com:8080</docker.registry>
         <docker.workdir>/opt/app</docker.workdir>

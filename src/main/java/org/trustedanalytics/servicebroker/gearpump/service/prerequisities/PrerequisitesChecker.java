@@ -21,16 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
-import org.trustedanalytics.servicebroker.gearpump.service.externals.ExternalProcessException;
-import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.HdfsUtils;
-import org.trustedanalytics.servicebroker.gearpump.service.file.ArchiverService;
-import org.trustedanalytics.servicebroker.gearpump.service.file.ResourceManagerService;
-import org.trustedanalytics.servicebroker.gearpump.yarn.YarnConfigFilesProvider;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 
 @Service
@@ -42,19 +36,7 @@ public class PrerequisitesChecker {
     private HdfsUtils hdfsUtils;
 
     @Autowired
-    private ArchiverService archiverService;
-
-    @Autowired
-    private ResourceManagerService resourceManagerService;
-
-    @Autowired
     private GearPumpSpawnerConfig gearPumpSpawnerConfig;
-
-    @Autowired
-    private YarnConfigFilesProvider yarnConfigFilesProvider;
-
-    @Autowired
-    private ExternalProcessExecutor externalProcessExecutor;
 
     /**
      * Ensure that requirements are met in order to start provisioning:
@@ -100,30 +82,6 @@ public class PrerequisitesChecker {
         LOGGER.info("Checking if the archive was unpacked in location: {}", gearPumpSpawnerConfig.getGearPumpDestinationFolder());
         File gearpumpDestinationFolder = new File(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
         LOGGER.debug("gearpumpDestinationFolder.path: {}", gearpumpDestinationFolder.getAbsolutePath());
-        boolean archiveUnpacked = gearpumpDestinationFolder.exists();
-        if (!archiveUnpacked) {
-            LOGGER.info("GearPump archive was not unpacked. Doing it now ...");
-            try {
-                archiverService.intoDestination("").unzip(archiveLocalPath);
-            } catch (IOException e) {
-                LOGGER.error("Cannot untar GearPump archive.", e);
-                throw new PrerequisitesException("Cannot untar GearPump archive.", e);
-            }
-        }
-
-        try {
-            setBinariesExecutable();
-        } catch (ExternalProcessException e) {
-            LOGGER.error("Error making GearPump binaires executable.", e);
-            throw new PrerequisitesException("Error making GearPump binaires executable.", e);
-        }
-
-        try {
-            copyYarnConfigFiles(); // yarnclient ignores HADOOP_CONF_DIR. workaround is to put config files to gp/conf dir
-        } catch (ExternalProcessException e) {
-            LOGGER.error("Error copying yarn config files.", e);
-            throw new PrerequisitesException("Error copying yarn config files.", e);
-        }
     }
 
     private void checkIfHdfsDirExists() {
@@ -174,20 +132,5 @@ public class PrerequisitesChecker {
             }
         }
         LOGGER.info("Archive IS stored in hdfs");
-    }
-
-    private void setBinariesExecutable() throws ExternalProcessException {
-        String[] command = new String[]{"chmod", "-R", "+x", String.format("%s/bin", gearPumpSpawnerConfig.getGearPumpDestinationFolder())};
-        runCommand(command);
-    }
-
-    private void copyYarnConfigFiles() throws ExternalProcessException {
-        String[] command = new String[]{"cp", "-R", String.format("%s/.", gearPumpSpawnerConfig.getYarnConfDir()), String.format("%s/conf/", gearPumpSpawnerConfig.getGearPumpDestinationFolder())};
-        runCommand(command);
-    }
-
-    private void runCommand(String[] command) throws ExternalProcessException {
-        LOGGER.debug("Executing command: {}", Arrays.toString(command));
-        externalProcessExecutor.runCommand(command, gearPumpSpawnerConfig.getGearPumpDestinationFolder(), null);
     }
 }

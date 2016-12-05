@@ -16,6 +16,16 @@
 
 USER_DIR=$(echo ${HADOOP_USER_NAME} | sed 's|/|_|')
 export KRB5CCNAME="/tmp/${USER_DIR}@CLOUDERA"
+export YARN_CONF_DIR="/etc/hadoop"
+export GEARPUMP_NAME="gearpump-${GEARPUMP_PACK_VERSION}"
 
 env
+
+echo "Unzip ./${GEARPUMP_NAME}.zip"
+unzip ./${GEARPUMP_NAME}.zip
+echo "Change mode ./${GEARPUMP_NAME}/bin/"
+chmod -R +x ./${GEARPUMP_NAME}/bin/
+echo "Copy ${YARN_CONF_DIR}/* to ./${GEARPUMP_NAME}/conf/yarnconf"
+cp -RL ${YARN_CONF_DIR}/* ./${GEARPUMP_NAME}/conf/yarnconf
+echo "Done! Run broker..."
 exec java -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar
