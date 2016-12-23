@@ -54,21 +54,25 @@ public class HdfsUtils {
     }
 
     @PostConstruct
-    public void init() throws LoginException, URISyntaxException, InterruptedException, IOException {
+    protected void init() throws LoginException, URISyntaxException, InterruptedException, IOException {
         LOGGER.info("=-=========================== create hdfs filesystem");
-        hdfsFs = createHdfsFs();
-
-        LOGGER.info("hdfsUri + " + hdfsUri);
-        hdfsFs.setWorkingDirectory(new Path(this.hdfsUri));
+        prepareHdfsUri();
+        prepareHdfsFileSystem();
     }
 
-    private FileSystem createHdfsFs() throws IOException, LoginException, InterruptedException, URISyntaxException {
-        LOGGER.info("create filesystem");
+    private void prepareHdfsUri() {
+        if (!hdfsUri.startsWith("hdfs://")) {
+            hdfsUri = hadoopConfiguration.get("fs.defaultFS") + ensureStartingSlash(hdfsUri);
+        }
+        LOGGER.info("HDFS uri: {}", hdfsUri);
+    }
+
+    private void prepareHdfsFileSystem() throws IOException, LoginException, InterruptedException, URISyntaxException {
         kerberosService.login();
         LOGGER.info("logged in");
         String user = kerberosService.getKerberosProperties().getUser();
-        URI hdfsUri = new URI(this.hdfsUri);
-        return FileSystem.get(hdfsUri, hadoopConfiguration, user);
+        hdfsFs = FileSystem.get(new URI(hdfsUri), hadoopConfiguration, user);
+        hdfsFs.setWorkingDirectory(new Path(this.hdfsUri));
     }
 
     public boolean exists(String name) throws IOException {
@@ -109,10 +113,9 @@ public class HdfsUtils {
         return path.startsWith("/") ? path.substring(1) : path;
     }
 
-    public static String ensureTrailingSlash(String text) {
-        return text + (text.endsWith("/") ? "" : "/");
+    private static String ensureStartingSlash(String text) {
+        return (text.startsWith("/") ? "" : "/") + text;
     }
-
 
     public String getHdfsUri() {
         return hdfsUri;
