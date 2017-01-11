@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.trustedanalytics.servicebroker.gearpump.yarn;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 
-@Deprecated
-@Configuration
-class YarnVcapServiceReader {
+@RunWith(MockitoJUnitRunner.class)
+public class YarnAppIdParserTest {
 
-//    @Value("${${yarn.conf.vcap_location}:not_supported}")
-    private String base64ZipFiles;
-
-    @Bean
-    YarnVcapServiceReader yarnVcapServiceReader() {
-        return new YarnVcapServiceReader();
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidApplicationId() {
+        String applicationId = "illegal_id";
+        new YarnAppIdParser(applicationId);
     }
 
-    public String getConfigZipFiles() {
-        return base64ZipFiles;
+    @Test
+    public void testValidApplicationId() {
+        String applicationId = "application_1234567890123_1";
+        new YarnAppIdParser(applicationId);
     }
 
 }

@@ -37,6 +37,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.UaaConnector.CREATE_UAA_CLIENT_URL;
 import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.UaaConnector.CREATE_UAA_TOKEN_URL;
+import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.UaaConnector.DELETE_UAA_CLIENT_URL;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UaaConnectorTest {
@@ -81,6 +82,18 @@ public class UaaConnectorTest {
 
         String createdToken = uaaConnector.createUaaToken(clientId, clientSecret);
         assertThat(createdToken, equalTo("test_token_type test_access_token"));
+    }
+
+    @Test
+    public void test_deleteUaaClient() throws Exception {
+
+        final String clientId = "uaaClientName";
+        final String uaaToken = "uaaToken";
+
+        when(restTemplate.exchange(eq(DELETE_UAA_CLIENT_URL), Mockito.any(), Mockito.<HttpEntity>any(), Mockito.<Class<String>>any(), Mockito.<String>any(), Mockito.<String>any()))
+                .thenReturn(new ResponseEntity<>("deleted!", HttpStatus.OK));
+        String responseBody = uaaConnector.deleteUaaClient(clientId, uaaToken);
+        assertThat(responseBody, equalTo("deleted!"));
     }
 
 }

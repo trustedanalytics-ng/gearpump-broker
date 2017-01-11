@@ -23,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,8 +34,8 @@ import java.io.IOException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Mockito.*;
-import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardInstanceFactory.CATALOG_URL;
 import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardInstanceFactory.CREATE_SERVICE_INSTANCE_URL;
+import static org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardInstanceFactory.DELETE_SERVICE_INSTANCE_URL;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DashboardInstanceFactoryTest {
@@ -44,11 +43,14 @@ public class DashboardInstanceFactoryTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private CatalogReader catalogReader;
+
     private DashboardInstanceFactory dashboardInstanceFactory;
 
     @Before
     public void before() throws IOException {
-        dashboardInstanceFactory = new DashboardInstanceFactory(new CfCaller(restTemplate));
+        dashboardInstanceFactory = new DashboardInstanceFactory(new CfCaller(restTemplate), catalogReader);
     }
 
     @Test
@@ -58,34 +60,16 @@ public class DashboardInstanceFactoryTest {
                 .thenReturn(new ResponseEntity<>(
                         "{\"id\": \"service_instance_guid\"}" , HttpStatus.OK));
 
-        final String catalogResponseJson = "[" +
-                "  {" +
-                "    \"entity\": {" +
-                "      \"label\": \"gearpump-dashboard\"," +
-                "      \"service_plans\": [" +
-                "        {" +
-                "          \"metadata\": {" +
-                "            \"guid\": \"service_plan_guid\"" +
-                "          }" +
-                "        }" +
-                "      ]" +
-                "    }," +
-                "    \"metadata\": {" +
-                "      \"guid\": \"service_guid\"" +
-                "    }" +
-                "  }" +
-                "]";
-
-        when(restTemplate.exchange(eq(CATALOG_URL), eq(HttpMethod.GET), Mockito.<HttpEntity>any(), Mockito.<Class<String>>any(), anyCollection()))
-                .thenReturn(new ResponseEntity<>(catalogResponseJson, HttpStatus.OK));
+        when(catalogReader.getUiServiceGuid()).thenReturn("service_guid");
+        when(catalogReader.getUiServiceGuid()).thenReturn("service_plan_guid");
 
         // we need to inject some @Values via reflection
         ReflectionTestUtils.setField(dashboardInstanceFactory, "platformApiEndpoint", "http://app.domain.com");
-        ReflectionTestUtils.setField(dashboardInstanceFactory, "uiServiceName", "gearpump-dashboard");
+        ReflectionTestUtils.setField(catalogReader, "uiServiceName", "gearpump-dashboard");
 
         try {
             String serviceInstanceGuid = dashboardInstanceFactory.createUIInstance("uiInstanceName", "spaceId", "orgId", "username", "password", "gearpumpMaster",
-                    "uaaClientName", "callback");
+                    "uaaClientName");
 
             assertThat(serviceInstanceGuid, equalTo("service_instance_guid"));
         } catch (Throwable ex) {
@@ -93,4 +77,15 @@ public class DashboardInstanceFactoryTest {
         }
     }
 
+    @Test
+    public void test_deleteUIInstance() throws Exception {
+
+        when(restTemplate.exchange(eq(DELETE_SERVICE_INSTANCE_URL), Mockito.any(), Mockito.<HttpEntity>any(), Mockito.<Class<String>>any(), anyString(), anyString()))
+                .thenReturn(new ResponseEntity<>(HttpStatus.OK));
+
+        // we need to inject some @Values via reflection
+        ReflectionTestUtils.setField(dashboardInstanceFactory, "platformApiEndpoint", "http://app.domain.com");
+
+        dashboardInstanceFactory.deleteUIServiceInstance("uiServiceInstanceGuid");
+    }
 }

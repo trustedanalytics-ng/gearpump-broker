@@ -23,5 +23,5 @@ public interface DashboardDeployer {
                                  String spaceId, String orgId, String uaaClientName)
             throws DashboardServiceException, CloudFoundryServiceException;
 
-    void undeployUI(String dashboardUri, String clientId) throws DashboardServiceException;
+    void undeployUI(String uiServiceInstanceId, String clientId) throws DashboardServiceException;
 }

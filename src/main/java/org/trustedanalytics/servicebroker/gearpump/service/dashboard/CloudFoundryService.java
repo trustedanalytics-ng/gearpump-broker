@@ -66,7 +66,7 @@ public class CloudFoundryService implements DashboardDeployer {
         uaaConnector.createUaaClient(uaaClientName, password, uiAppUrl, uaaToken);
 
         try {
-            uiServiceInstanceGuid = dashboardFactory.createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName, uiAppUrl);
+            uiServiceInstanceGuid = dashboardFactory.createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
         } catch (IOException e) {
             throw new CloudFoundryServiceException("Cannot create UI instance.", e);
         }

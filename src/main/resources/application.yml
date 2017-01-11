@@ -7,7 +7,6 @@ gearpump:
     version: ${gearpump.pack.version:0.0.0}
   # APP_ROOT is set in Dockerfile
   destinationFolder: ${app.root:.}/gearpump-${gearpump.pack.version:0.0.0}
-#  gearpumpUri: ${gearpump.uri:}
   hdfsDir: ${hdfs.dir:/user/gearpump}
   confDir: conf/yarn.conf
   yarnclient:
@@ -55,7 +54,6 @@ kerberos:
 yarn:
   conf:
     dir: ${HADOOP_CONF_DIR:/etc/hadoop}
-#    vcap_location: vcap.services.yarn-gearpump.credentials.HADOOP_CONFIG_ZIP.encoded_zip
     override: false
 
 api.endpoint: ${vcap.services.sso.credentials.apiEndpoint:}

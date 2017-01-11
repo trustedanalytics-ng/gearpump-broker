@@ -45,9 +45,9 @@ class UaaConnector {
 
     static final String CREATE_UAA_TOKEN_URL = "{uaaTokenUrl}";
     static final String CREATE_UAA_CLIENT_URL = "{uaaUrl}/oauth/clients";
-    private static final String DELETE_UAA_CLIENT_URL = "{uaaUrl}/oauth/clients/{client_id}";
+    static final String DELETE_UAA_CLIENT_URL = "{uaaUrl}/oauth/clients/{client_id}";
 
-    private static final String REDIRECT_URI_SUFIX = "/login/oauth2/cloudfoundryuaa/callback";
+    private static final String REDIRECT_URI_SUFFIX = "/login/oauth2/cloudfoundryuaa/callback";
 
     private final CfCaller cfCaller;
 
@@ -92,7 +92,7 @@ class UaaConnector {
      */
     public String createUaaClient(String clientId, String clientSecret, String redirectUri, String token) {
         LOGGER.info("Creating new UAA client");
-        String body = String.format(CREATE_UAA_CLIENT_BODY_TEMPLATE, clientId, clientId, clientSecret, "http://" + redirectUri + REDIRECT_URI_SUFIX);
+        String body = String.format(CREATE_UAA_CLIENT_BODY_TEMPLATE, clientId, clientId, clientSecret, "http://" + redirectUri + REDIRECT_URI_SUFFIX);
         LOGGER.debug("body: {}", body);
 
         HttpHeaders headers = new HttpHeaders();
@@ -100,7 +100,7 @@ class UaaConnector {
         headers.add(CONTENT_TYPE_HEADER, "application/json");
 
         ResponseEntity<String> response = cfCaller.executeWithHeaders(CREATE_UAA_CLIENT_URL, HttpMethod.POST, body, headers, uaaApiEndpoint);
-        LOGGER.info("Created UAA client: {}", response.getBody());
+        LOGGER.debug("Created UAA client. Response body: {}", response.getBody());
         return response.getBody();
     }
 

@@ -49,7 +49,7 @@ public class CloudFoundryServiceTest {
     @Test
     public void test_deployUI() throws Exception {
 
-        when(dashboardFactory.createUIInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
+        when(dashboardFactory.createUIInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
 
         ReflectionTestUtils.setField(dashboardDeployer, "cfApiEndpoint", "http://api.domain.com");
 
@@ -60,5 +60,16 @@ public class CloudFoundryServiceTest {
         verify(uaaConnector).createUaaClient(anyString(), anyString(), anyString(), anyString());
 
         assertThat(dashboardData.get("uiServiceInstanceGuid"), equalTo("my_guid"));
+    }
+
+    @Test
+    public void test_undeployUI() throws Exception {
+
+        final String uiServiceInstanceId = "uiServiceInstanceId";
+        dashboardDeployer.undeployUI(uiServiceInstanceId, "clientId");
+
+        verify(dashboardFactory).deleteUIServiceInstance(uiServiceInstanceId);
+        verify(uaaConnector).createUaaToken(anyString(), anyString());
+        verify(uaaConnector).deleteUaaClient(anyString(), anyString());
     }
 }

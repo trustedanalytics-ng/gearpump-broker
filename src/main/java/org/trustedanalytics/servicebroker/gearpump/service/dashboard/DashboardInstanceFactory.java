@@ -15,7 +15,6 @@
  */
 package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,21 +24,22 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 import static org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller.CONTENT_TYPE_HEADER;
 
 @Service
 class DashboardInstanceFactory {
-    private final Logger LOGGER = LoggerFactory.getLogger(DashboardInstanceFactory.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashboardInstanceFactory.class);
 
     private static final String METADATA_GUID = "/id";
 
-    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"type\":\"service\",\"bindings\":[]," +
+    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"type\":\"service\",\"classId\":\"%s\",\"bindings\":[]," +
             "\"metadata\":[" +
                 "{\"key\": \"PLAN_ID\", \"value\": \"%s\"}," +
                 "{\"key\": \"USERNAME\", \"value\": \"%s\"}," +
@@ -49,43 +49,36 @@ class DashboardInstanceFactory {
                 "{\"key\": \"UAA_CLIENT_SECRET\", \"value\": \"%s\"}" +
             "]}";
 
-    static final String CREATE_SERVICE_INSTANCE_URL = "{apiUrl}/api/v1/services/{serviceId}";
-    static final String DELETE_SERVICE_INSTANCE_URL = "{apiUrl}/api/v1/services/{instanceId}";
-    static final String CATALOG_URL = "{apiUrl}/api/v1/catalog";
+    static final String CREATE_SERVICE_INSTANCE_URL = "{apiUrl}/api/v3/services";
+    static final String DELETE_SERVICE_INSTANCE_URL = "{apiUrl}/api/v3/services/{instanceId}";
 
     private final CfCaller cfCaller;
-
-    @Value("${gearpump.uiName:}")
-    private String uiServiceName;
-
-    @Value("${gearpump.uiServiceId:}")
-    private String uiServiceGuid;
-
-    @Value("${gearpump.uiServicePlanId:}")
-    private String uiServicePlanGuid;
+    private final CatalogReader catalogReader;
 
     @Value("${tap.api.endpoint}")
     private String platformApiEndpoint;
 
     @Autowired
-    DashboardInstanceFactory(CfCaller cfCaller) {
+    DashboardInstanceFactory(CfCaller cfCaller, CatalogReader catalogReader) {
         this.cfCaller = cfCaller;
+        this.catalogReader = catalogReader;
     }
 
-    public String createUIInstance(String uiInstanceName, String spaceId, String orgId, String username,
-                            String password, String gearpumpMaster, String uaaClientName, String callback) throws IOException, DashboardServiceException {
-        LOGGER.info("Creating Dashboard service instance");
+    @PostConstruct
+    protected void init() throws IOException {
+        catalogReader.readGearpumpDashboardServiceOffering();
+    }
 
-        if (StringUtils.isEmpty(uiServicePlanGuid)) {
-            processServiceCatalog();
-        }
+    String createUIInstance(String uiInstanceName, String spaceId, String orgId, String username,
+                            String password, String gearpumpMaster, String uaaClientName) throws IOException {
+        LOGGER.info("Creating Dashboard service instance");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(CONTENT_TYPE_HEADER, "application/json");
 
-        String body = createCreateRequestBody(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName, callback);
+        String body = createCreateRequestBody(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
 
-        ResponseEntity<String> response = cfCaller.executeWithHeaders(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, headers, platformApiEndpoint, uiServiceGuid);
+        ResponseEntity<String> response = cfCaller.executeWithHeaders(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, headers, platformApiEndpoint);
 
         String uiServiceInstanceGuid = cfCaller.getValueFromJson(response.getBody(), METADATA_GUID);
         LOGGER.debug("UI Service Instance Guid '{}'", uiServiceInstanceGuid);
@@ -93,35 +86,20 @@ class DashboardInstanceFactory {
         return uiServiceInstanceGuid;
     }
 
-    private void processServiceCatalog() throws IOException {
-        LOGGER.info("Service catalog processing");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(CONTENT_TYPE_HEADER, "application/json");
-
-        ResponseEntity<String> response = cfCaller.executeWithHeaders(CATALOG_URL, HttpMethod.GET, "", headers, platformApiEndpoint);
-
-        JsonNode root = cfCaller.getRoot(response.getBody());
-        for (JsonNode entityNode : root) {
-            JsonNode entity = entityNode.get("entity");
-            if (uiServiceName.equals(entity.get("label").asText())) {
-                this.uiServiceGuid = entityNode.at("/metadata/guid").asText();
-                this.uiServicePlanGuid = entityNode.at("/entity/service_plans/0/metadata/guid").asText();
-                break;
-            }
-        }
-
-        LOGGER.info("Retrieved service GUIDs: serviceGuid={}, servicePlanGuid={}", uiServiceGuid, uiServicePlanGuid);
-    }
-
-    private String createCreateRequestBody(String uiInstanceName, String spaceId, String orgId, String username, String password, String gearpumpMaster,
-                                           String uaaClientName, String callback) {
-        String body = String.format(CREATE_SERVICE_BODY_TEMPLATE, uiInstanceName, uiServicePlanGuid, username, password, gearpumpMaster, uaaClientName, password);
+    private String createCreateRequestBody(String uiInstanceName, String spaceId, String orgId, String username, String password,
+                                           String gearpumpMaster, String uaaClientName)
+    {
+        LOGGER.debug("Creating request body. uiInstanceName: {}, spaceId: {}, orgId: {}, username: {}, gearpumpMaster: {}, uaaClientName: {}",
+                uiInstanceName, spaceId, orgId, username, gearpumpMaster, password);
+        String body = String.format(CREATE_SERVICE_BODY_TEMPLATE, uiInstanceName,
+                catalogReader.getUiServiceGuid(),
+                catalogReader.getUiServicePlanGuid(),
+                username, password, gearpumpMaster, uaaClientName, password);
         LOGGER.debug("Create req body: {}", body);
         return body;
     }
 
-    public void deleteUIServiceInstance(String uiServiceInstanceGuid) throws DashboardServiceException {
+    void deleteUIServiceInstance(String uiServiceInstanceGuid) throws DashboardServiceException {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.add(CONTENT_TYPE_HEADER, "application/json");
