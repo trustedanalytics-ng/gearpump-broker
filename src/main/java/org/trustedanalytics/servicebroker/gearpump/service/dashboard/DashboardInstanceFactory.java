@@ -39,7 +39,7 @@ class DashboardInstanceFactory {
 
     private static final String METADATA_GUID = "/id";
 
-    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"type\":\"service\",\"classId\":\"%s\",\"bindings\":[]," +
+    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"type\":\"service\",\"offeringId\":\"%s\",\"bindings\":[]," +
             "\"metadata\":[" +
                 "{\"key\": \"PLAN_ID\", \"value\": \"%s\"}," +
                 "{\"key\": \"USERNAME\", \"value\": \"%s\"}," +
