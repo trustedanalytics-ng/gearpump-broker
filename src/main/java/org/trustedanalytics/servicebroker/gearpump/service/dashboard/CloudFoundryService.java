@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public class CloudFoundryService implements DashboardDeployer {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudFoundryService.class);
 
     private final UaaConnector uaaConnector;
-    private final DashboardInstanceFactory dashboardFactory;
+    private final ServiceInstanceManager dashboardFactory;
 
     @Value("${api.endpoint}")
     private String cfApiEndpoint;
@@ -47,7 +47,7 @@ public class CloudFoundryService implements DashboardDeployer {
     private String ssoAdminClientSecret;
 
     @Autowired
-    public CloudFoundryService(DashboardInstanceFactory dashboardFactory, UaaConnector uaaConnector) {
+    public CloudFoundryService(ServiceInstanceManager dashboardFactory, UaaConnector uaaConnector) {
         this.dashboardFactory = dashboardFactory;
         this.uaaConnector = uaaConnector;
     }
@@ -66,7 +66,7 @@ public class CloudFoundryService implements DashboardDeployer {
         uaaConnector.createUaaClient(uaaClientName, password, uiAppUrl, uaaToken);
 
         try {
-            uiServiceInstanceGuid = dashboardFactory.createUIInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
+            uiServiceInstanceGuid = dashboardFactory.createInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
         } catch (IOException e) {
             throw new CloudFoundryServiceException("Cannot create UI instance.", e);
         }
@@ -102,7 +102,11 @@ public class CloudFoundryService implements DashboardDeployer {
     public void undeployUI(String uiServiceInstanceId, String clientId) throws DashboardServiceException {
         LOGGER.info("Undeploying GearPump dashboard: uiServiceInstanceId={}", uiServiceInstanceId);
 
-        dashboardFactory.deleteUIServiceInstance(uiServiceInstanceId);
+        if (dashboardFactory.stopInstance(uiServiceInstanceId)
+                && dashboardFactory.ensureInstanceIsStopped(uiServiceInstanceId)) {
+
+            dashboardFactory.deleteInstance(uiServiceInstanceId);
+        }
 
         String uaaToken = uaaConnector.createUaaToken(ssoAdminClientId, ssoAdminClientSecret);
         uaaConnector.deleteUaaClient(clientId, uaaToken);

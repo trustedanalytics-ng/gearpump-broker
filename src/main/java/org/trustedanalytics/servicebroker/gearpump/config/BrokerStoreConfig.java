@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +33,6 @@ import org.trustedanalytics.cfbroker.store.serialization.RepositorySerializer;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClient;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperClientBuilder;
 import org.trustedanalytics.cfbroker.store.zookeeper.service.ZookeeperStore;
-import org.trustedanalytics.hadoop.kerberos.KrbLoginManager;
 import org.trustedanalytics.hadoop.kerberos.KrbLoginManagerFactory;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosProperties;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
@@ -49,7 +46,6 @@ public class BrokerStoreConfig {
 
     @Autowired
     private KerberosProperties kerberosProperties;
-    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerStoreConfig.class);
 
     private FactoryHelper helper;
 

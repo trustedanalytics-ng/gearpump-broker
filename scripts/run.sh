@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ USER_DIR=$(echo ${HADOOP_USER_NAME} | sed 's|/|_|')
 export KRB5CCNAME="/tmp/${USER_DIR}@CLOUDERA"
 export YARN_CONF_DIR="/etc/hadoop"
 export GEARPUMP_NAME="gearpump-${GEARPUMP_PACK_VERSION}"
+
+export GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_ENABLED=true
+export GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_INTERVAL=10
+export GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_MAX_RETRIALS=6
 
 env | sort
 

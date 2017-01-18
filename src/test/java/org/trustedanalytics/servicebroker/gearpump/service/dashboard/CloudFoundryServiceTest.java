@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 public class CloudFoundryServiceTest {
 
     @Mock
-    private DashboardInstanceFactory dashboardFactory;
+    private ServiceInstanceManager dashboardFactory;
 
     @Mock
     private UaaConnector uaaConnector;
@@ -49,7 +49,7 @@ public class CloudFoundryServiceTest {
     @Test
     public void test_deployUI() throws Exception {
 
-        when(dashboardFactory.createUIInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
+        when(dashboardFactory.createInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
 
         ReflectionTestUtils.setField(dashboardDeployer, "cfApiEndpoint", "http://api.domain.com");
 
@@ -66,9 +66,13 @@ public class CloudFoundryServiceTest {
     public void test_undeployUI() throws Exception {
 
         final String uiServiceInstanceId = "uiServiceInstanceId";
+
+        when(dashboardFactory.stopInstance(eq(uiServiceInstanceId))).thenReturn(true);
+        when(dashboardFactory.ensureInstanceIsStopped(uiServiceInstanceId)).thenReturn(true);
+
         dashboardDeployer.undeployUI(uiServiceInstanceId, "clientId");
 
-        verify(dashboardFactory).deleteUIServiceInstance(uiServiceInstanceId);
+        verify(dashboardFactory).deleteInstance(uiServiceInstanceId);
         verify(uaaConnector).createUaaToken(anyString(), anyString());
         verify(uaaConnector).deleteUaaClient(anyString(), anyString());
     }

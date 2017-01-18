@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 set -e
 
-VERSION=0.8.7
+VERSION=0.8.8
 PROJECT_NAME=gearpump-broker
 PACKAGE_NAME=$PROJECT_NAME-$VERSION
 JAR_NAME="$PACKAGE_NAME.jar"
