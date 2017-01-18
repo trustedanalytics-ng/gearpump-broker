@@ -30,7 +30,6 @@ import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutor;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.ExternalProcessExecutorResult;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.HdfsUtils;
-import org.trustedanalytics.servicebroker.gearpump.service.file.ResourceManagerService;
 
 import java.io.IOException;
 
@@ -59,8 +58,6 @@ public class GearPumpDriverExecTest {
     @Mock
     private GearPumpOutputReportReader gearPumpOutputReportReader;
     @Mock
-    private ResourceManagerService resourceManagerService;
-    @Mock
     private GearPumpSpawnerConfig externalConfiguration;
     @Mock
     private HdfsUtils hdfsUtils;
@@ -81,7 +78,6 @@ public class GearPumpDriverExecTest {
 
     private void createMocks() throws IOException {
         when(gearPumpCredentialsParser.getApplicationId(Mockito.anyString())).thenReturn(APPLICATION_ID);
-        when(resourceManagerService.getRealPath(Mockito.anyString())).thenReturn(DESTINATION_PATH);
 
         when(externalConfiguration.getHdfsGearPumpPackPath()).thenReturn(HDFS_PATH);
         when(externalConfiguration.getGearPumpDestinationFolder()).thenReturn(DESTINATION_FOLDER);

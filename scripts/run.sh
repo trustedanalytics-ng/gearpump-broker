@@ -19,13 +19,21 @@ export KRB5CCNAME="/tmp/${USER_DIR}@CLOUDERA"
 export YARN_CONF_DIR="/etc/hadoop"
 export GEARPUMP_NAME="gearpump-${GEARPUMP_PACK_VERSION}"
 
-env
+env | sort
+
+if [[ ! -e ${GEARPUMP_NAME}.zip ]]; then
+    echo "Required ${GEARPUMP_NAME}.zip does not exist in this folder:" `pwd`
+    exit 1
+fi
 
 echo "Unzip ./${GEARPUMP_NAME}.zip"
 unzip ./${GEARPUMP_NAME}.zip
+
 echo "Change mode ./${GEARPUMP_NAME}/bin/"
 chmod -R +x ./${GEARPUMP_NAME}/bin/
+
 echo "Copy ${YARN_CONF_DIR}/* to ./${GEARPUMP_NAME}/conf/yarnconf"
 cp -RL ${YARN_CONF_DIR}/* ./${GEARPUMP_NAME}/conf/yarnconf
+
 echo "Done! Run broker..."
 exec java -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar

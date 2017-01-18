@@ -18,21 +18,30 @@ package org.trustedanalytics.servicebroker.gearpump.service.prerequisities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Service;
 
-@Configuration
-public class PrerequisitiesConfig implements ApplicationListener<ContextRefreshedEvent> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrerequisitiesConfig.class);
+@Service
+public class PrerequisitesCheckingService implements ApplicationListener<ContextRefreshedEvent> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PrerequisitesCheckingService.class);
+
+    private final PrerequisitesChecker prerequisitesChecker;
 
     @Autowired
-    PrerequisitesChecker prerequisitesChecker;
+    public PrerequisitesCheckingService(PrerequisitesChecker prerequisitesChecker) {
+        this.prerequisitesChecker = prerequisitesChecker;
+    }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         LOGGER.info("contextRefreshedEvent = [ {} ]", contextRefreshedEvent);
-        prerequisitesChecker.ensurePrerequisities();
+        checkPrerequisites();
+    }
+
+    private void checkPrerequisites() {
+        prerequisitesChecker.ensureHdfsDirectoryExists();
+        prerequisitesChecker.ensureGearpumpArchiveExistsOnHdfs();
     }
 }

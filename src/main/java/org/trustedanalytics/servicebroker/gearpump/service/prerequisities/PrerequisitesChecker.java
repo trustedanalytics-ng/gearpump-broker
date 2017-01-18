@@ -23,68 +23,23 @@ import org.springframework.stereotype.Service;
 import org.trustedanalytics.servicebroker.gearpump.config.GearPumpSpawnerConfig;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.HdfsUtils;
 
-import java.io.File;
 import java.io.IOException;
 
-
 @Service
-public class PrerequisitesChecker {
+class PrerequisitesChecker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PrerequisitesChecker.class);
 
-    @Autowired
-    private HdfsUtils hdfsUtils;
+    private final HdfsUtils hdfsUtils;
+    private final GearPumpSpawnerConfig gearPumpSpawnerConfig;
 
     @Autowired
-    private GearPumpSpawnerConfig gearPumpSpawnerConfig;
-
-    /**
-     * Ensure that requirements are met in order to start provisioning:
-     * <li>gearpump binary pack (archive) is present</li>
-     * <li>the archive is unpacked</li>
-     * <li>the archive is stored on hdfs</li>
-     */
-    public void ensurePrerequisities() {
-        LOGGER.info("ensure prerequisities invoked");
-
-        String gearPumpPackName = gearPumpSpawnerConfig.getGearPumpPackName();
-        String archiveLocalPath = gearPumpPackName;
-        // 1. check if the archive exists
-        checkIfTheArchiveExists(archiveLocalPath, gearPumpPackName);
-
-        // 2. check if unpacked version exists
-        checkIfUnpackedVersionExists(archiveLocalPath);
-
-        // 3. check if hdfs directory exists
-        checkIfHdfsDirExists();
-
-        //4. check if the pack is in hdfs
-        checkPresenceOfPackOnHdfs(archiveLocalPath);
+    public PrerequisitesChecker(HdfsUtils hdfsUtils, GearPumpSpawnerConfig gearPumpSpawnerConfig) {
+        this.hdfsUtils = hdfsUtils;
+        this.gearPumpSpawnerConfig = gearPumpSpawnerConfig;
     }
 
-
-
-    private void checkIfTheArchiveExists(String archiveLocalPath, String gearPumpPackName) {
-        LOGGER.info("Checking if archive {} exists. ", archiveLocalPath);
-        File gearpumpArchive = new File(archiveLocalPath);
-        LOGGER.debug("gearpumpArchive.path: {}", gearpumpArchive.getAbsolutePath());
-        boolean archivePresent = gearpumpArchive.exists();
-        if (!archivePresent) {
-            LOGGER.info("GearPump archive not present. Downloading it...");
-            // for now it's always there - it's included in the build
-            LOGGER.error("Not yet implemented");
-            throw new PrerequisitesException("Downloading archive not yet implemented.");
-        }
-        LOGGER.info("GearPump archive {} is present. ", gearPumpPackName);
-    }
-
-    private void checkIfUnpackedVersionExists(String archiveLocalPath) {
-        LOGGER.info("Checking if the archive was unpacked in location: {}", gearPumpSpawnerConfig.getGearPumpDestinationFolder());
-        File gearpumpDestinationFolder = new File(gearPumpSpawnerConfig.getGearPumpDestinationFolder());
-        LOGGER.debug("gearpumpDestinationFolder.path: {}", gearpumpDestinationFolder.getAbsolutePath());
-    }
-
-    private void checkIfHdfsDirExists() {
+    void ensureHdfsDirectoryExists() {
         String hdfsDirectory = gearPumpSpawnerConfig.getHdfsDir();
         LOGGER.info("Check if HDFS directory for GearPump archive exists. hdfsDirectory: {}", hdfsDirectory);
         boolean hdfsDirExists;
@@ -109,7 +64,7 @@ public class PrerequisitesChecker {
         LOGGER.info("HDFS directory for GearPump archive exists.");
     }
 
-    private void checkPresenceOfPackOnHdfs(String archiveLocalPath) {
+    void ensureGearpumpArchiveExistsOnHdfs() {
         String hdfsFilePath = gearPumpSpawnerConfig.getHdfsGearPumpPackPath();
         LOGGER.info("Checking if the archive ({}) is stored in hdfs", hdfsFilePath);
         boolean hdfsFileExists;
@@ -123,7 +78,7 @@ public class PrerequisitesChecker {
         if (!hdfsFileExists) {
             try {
                 LOGGER.info("The archive is not on HDFS. Uploading it now...", hdfsFilePath);
-                hdfsUtils.upload(archiveLocalPath, hdfsFilePath);
+                hdfsUtils.upload(gearPumpSpawnerConfig.getGearPumpPackName(), hdfsFilePath);
                 // make sure VCAP user can use this file
                 hdfsUtils.elevatePermissions(hdfsFilePath);
             } catch (IOException e) {
