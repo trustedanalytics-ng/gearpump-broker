@@ -19,13 +19,13 @@ gearpump:
   uiServicePlanId: ${GEARPUMP_UI_CATALOG_SERVICE_PLAN_ID:}
 
   dashboard:
-    stopValidator:
+    stateValidator:
       # indicates if retrials are enabled
-      retryEnabled: ${GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_ENABLED:true}
+      retryEnabled: ${GEARPUMP_DASHBOARD_STATE_VALIDATOR_RETRY_ENABLED:true}
       # number of seconds to wait between consecutive request retrials
-      retryInterval: ${GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_INTERVAL:10}
+      retryInterval: ${GEARPUMP_DASHBOARD_STATE_VALIDATOR_RETRY_INTERVAL:10}
       # max number of request retrials
-      maxRetryCount: ${GEARPUMP_DASHBOARD_STOP_VALIDATOR_RETRY_MAX_RETRIALS:6}
+      maxRetryCount: ${GEARPUMP_DASHBOARD_STATE_VALIDATOR_RETRY_MAX_RETRIALS:6}
 
 tap:
   user:

@@ -19,26 +19,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller;
+import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.JsonUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Optional;
-
-import static org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller.CONTENT_TYPE_HEADER;
 
 @Service
 class DashboardInstanceFactory implements ServiceInstanceManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DashboardInstanceFactory.class);
 
-    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{\"name\":\"%s\",\"type\":\"service\",\"offeringId\":\"%s\",\"bindings\":[]," +
+    private static final String CREATE_SERVICE_BODY_TEMPLATE = "{" +
+            "\"name\":\"%s\"," +
+            "\"type\":\"SERVICE\"," +
+            "\"offeringId\":\"%s\"," +
+            "\"bindings\":[]," +
             "\"metadata\":[" +
                 "{\"key\": \"PLAN_ID\", \"value\": \"%s\"}," +
                 "{\"key\": \"USERNAME\", \"value\": \"%s\"}," +
@@ -55,7 +57,6 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
 
     static final String METADATA_ID = "/id";
     static final String METADATA_STATE = "/state";
-    static final String INSTANCE_STATE_STOPPED = "STOPPED";
 
     private final CfCaller cfCaller;
     private final CatalogReader catalogReader;
@@ -78,14 +79,14 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
 
     @Override
     public String createInstance(String uiInstanceName, String spaceId, String orgId, String username,
-                                 String password, String gearpumpMaster, String uaaClientName) throws IOException {
+                                 String password, String gearpumpMaster, String uaaClientName) throws DashboardServiceException {
         LOGGER.info("Creating Dashboard service instance");
 
         String body = createCreateRequestBody(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
-        ResponseEntity<String> response = cfCaller.executeWithHeaders(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, getHttpHeaders(), platformApiEndpoint);
+        ResponseEntity<String> response = cfCaller.execute(CREATE_SERVICE_INSTANCE_URL, HttpMethod.POST, body, platformApiEndpoint);
 
-        String instanceId = cfCaller.getValueFromJson(response.getBody(), METADATA_ID);
-        LOGGER.debug("UI Service Instance Guid '{}'", instanceId);
+        String instanceId = getInstanceProperty(response.getBody(), METADATA_ID);
+        LOGGER.info("UI service instanceId: {}", instanceId);
 
         return instanceId;
     }
@@ -103,17 +104,11 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
         return body;
     }
 
-    private static HttpHeaders getHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(CONTENT_TYPE_HEADER, "application/json");
-        return headers;
-    }
-
     @Override
     public void deleteInstance(String instanceId) throws DashboardServiceException {
         LOGGER.info("Deleting Dashboard service instance");
         try {
-            cfCaller.executeWithHeaders(DELETE_SERVICE_INSTANCE_URL, HttpMethod.DELETE, "", getHttpHeaders(), platformApiEndpoint, instanceId);
+            cfCaller.execute(DELETE_SERVICE_INSTANCE_URL, HttpMethod.DELETE, "", platformApiEndpoint, instanceId);
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
@@ -129,7 +124,7 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
     public boolean stopInstance(String instanceId) throws DashboardServiceException {
         LOGGER.info("Stopping Dashboard service instance");
         try {
-            cfCaller.executeWithHeaders(STOP_SERVICE_INSTANCE_URL, HttpMethod.PUT, "", getHttpHeaders(), platformApiEndpoint, instanceId);
+            cfCaller.execute(STOP_SERVICE_INSTANCE_URL, HttpMethod.PUT, "", platformApiEndpoint, instanceId);
             return true;
 
         } catch (HttpClientErrorException e) {
@@ -144,34 +139,12 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
     }
 
     @Override
-    public String getInstanceState(String instanceData) throws DashboardServiceException {
-        LOGGER.info("Getting Dashboard service instance state");
-        String instanceState = getInstanceProperty(instanceData, METADATA_STATE);
-        if (instanceState == null) {
-            throw new DashboardServiceException("Instance state not found.");
-        }
-        LOGGER.info("Dashboard service instance state = {}", instanceState);
-        return instanceState;
-    }
-
-    @Override
-    public String getInstanceProperty(String instanceData, String propertyName) throws DashboardServiceException {
-        try {
-            return cfCaller.getValueFromJson(instanceData, propertyName);
-        } catch (IOException e) {
-            LOGGER.error("No such instance property: {}", propertyName);
-            throw new DashboardServiceException(String.format("No such instance property: %s", propertyName), e);
-        }
-    }
-
-    @Override
     public Optional<String> getInstance(String instanceId) throws DashboardServiceException {
         LOGGER.info("Getting dashboard service instance");
         try {
-            ResponseEntity<String> response = cfCaller.executeWithHeaders(GET_SERVICE_INSTANCE_URL, HttpMethod.GET, "", getHttpHeaders(), platformApiEndpoint, instanceId);
+            ResponseEntity<String> response = cfCaller.execute(GET_SERVICE_INSTANCE_URL, HttpMethod.GET, "", platformApiEndpoint, instanceId);
             LOGGER.debug("Response: {}", response);
             return Optional.of(response.getBody());
-
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 LOGGER.warn("Cannot load Gearpump UI instance data. Gearpump UI instance with GUID {} doesn't exist. Skipping.", instanceId);
@@ -183,25 +156,37 @@ class DashboardInstanceFactory implements ServiceInstanceManager {
         }
     }
 
+    private static String getInstanceProperty(String instanceData, String propertyName) throws DashboardServiceException {
+        try {
+            return JsonUtils.getValueFromJson(instanceData, propertyName);
+        } catch (IOException e) {
+            LOGGER.error("No such instance property: {}", propertyName);
+            throw new DashboardServiceException(String.format("No such instance property: %s", propertyName), e);
+        }
+    }
+
     @Override
-    public Optional<Boolean> isInstanceStopped(String instanceId) throws DashboardServiceException {
-        LOGGER.info("Checking if the Gearpump dashboard has been stopped");
+    public Optional<Boolean> hasInstanceState(String instanceId, InstanceState expectedState) throws DashboardServiceException {
+        LOGGER.info("Checking if the Gearpump dashboard is in state: {}", expectedState);
 
         Optional<String> instanceData = getInstance(instanceId);
         if (!instanceData.isPresent()) {
             return Optional.empty();
         }
 
-        String instanceState = getInstanceState(instanceData.get());
-        boolean stopped = INSTANCE_STATE_STOPPED.equals(instanceState);
-
-        return Optional.of(stopped);
+        String instanceState = getInstanceProperty(instanceData.get(), METADATA_STATE);
+        LOGGER.info("Current Gearpump dashboard state: {}", instanceState);
+        boolean hasState = expectedState.name().equals(instanceState);
+        return Optional.of(hasState);
     }
 
     @Override
-    public boolean ensureInstanceIsStopped(String instanceId) throws DashboardServiceException {
-        LOGGER.info("Ensuring if the Gearpump dashboard has been stopped");
-        return stateValidator.validate(() -> isInstanceStopped(instanceId));
+    public boolean ensureInstanceStopped(String instanceId) throws DashboardServiceException {
+        return stateValidator.validate(this::hasInstanceState, instanceId, InstanceState.STOPPED);
     }
 
+    @Override
+    public boolean ensureInstanceRunning(String instanceId) throws DashboardServiceException {
+        return stateValidator.validate(this::hasInstanceState, instanceId, InstanceState.RUNNING);
+    }
 }

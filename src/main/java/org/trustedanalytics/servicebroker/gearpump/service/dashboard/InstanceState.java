@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
 
-public class CloudFoundryServiceException extends Exception {
-    public CloudFoundryServiceException() {
-        super();
-    }
-
-    public CloudFoundryServiceException(String message) {
-        super(message);
-    }
-
-    public CloudFoundryServiceException(String message, Throwable cause) {
-        super(message, cause);
-    }
+enum InstanceState {
+    STOPPED,
+    RUNNING
 }

@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -50,6 +51,7 @@ public class CloudFoundryServiceTest {
     public void test_deployUI() throws Exception {
 
         when(dashboardFactory.createInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
+        when(dashboardFactory.ensureInstanceRunning(anyString())).thenReturn(true);
 
         ReflectionTestUtils.setField(dashboardDeployer, "cfApiEndpoint", "http://api.domain.com");
 
@@ -68,7 +70,7 @@ public class CloudFoundryServiceTest {
         final String uiServiceInstanceId = "uiServiceInstanceId";
 
         when(dashboardFactory.stopInstance(eq(uiServiceInstanceId))).thenReturn(true);
-        when(dashboardFactory.ensureInstanceIsStopped(uiServiceInstanceId)).thenReturn(true);
+        when(dashboardFactory.ensureInstanceStopped(uiServiceInstanceId)).thenReturn(true);
 
         dashboardDeployer.undeployUI(uiServiceInstanceId, "clientId");
 

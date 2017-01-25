@@ -2,7 +2,7 @@
 
 # gearpump-broker
 
-TAP NG broker for Apache Gearpump (see: [http://gearpump.apache.org/](http://gearpump.apache.org/)).
+TAP broker for Apache Gearpump (see: [http://gearpump.apache.org/](http://gearpump.apache.org/)).
 
 Apache Gearpump broker spawns Apache Gearpump UI (dashboard) on TAP NG (using application-broker) and submits Apache Gearpump to YARN.
 That's why it needs YARN service instance and gearpump-dashboard already prepared to work.

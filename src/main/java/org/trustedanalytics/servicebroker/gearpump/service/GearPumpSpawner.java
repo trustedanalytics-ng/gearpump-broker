@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.trustedanalytics.servicebroker.gearpump.config.CatalogConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
-import org.trustedanalytics.servicebroker.gearpump.service.dashboard.CloudFoundryServiceException;
 import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardDeployer;
 import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardServiceException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
@@ -73,7 +72,7 @@ public class GearPumpSpawner {
     }
 
     private void provisionOnTap(GearPumpCredentials gearPumpCredentials, String spaceId, String orgId, String serviceInstanceId)
-            throws DashboardServiceException, CloudFoundryServiceException {
+            throws DashboardServiceException {
         LOGGER.info("Provisioning on TAP");
 
         String uiServiceInstanceName = "gp-ui-" + serviceInstanceId;

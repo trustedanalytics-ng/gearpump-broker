@@ -87,7 +87,7 @@ public class DashboardInstanceFactoryTest {
         final String instanceId = "uiServiceInstanceGuid";
 
         mockStopInstanceResponse();
-        mockGetInstanceResponse(instanceId, DashboardInstanceFactory.INSTANCE_STATE_STOPPED);
+        mockGetInstanceResponse(instanceId, InstanceState.STOPPED);
         mockDeleteInstanceResponse();
 
         // we need to inject some @Values via reflection
@@ -125,14 +125,14 @@ public class DashboardInstanceFactoryTest {
     public void test_getInstance() throws Exception {
 
         final String instance1 = "uiServiceInstanceGuid1";
-        mockGetInstanceResponse(instance1, DashboardInstanceFactory.INSTANCE_STATE_STOPPED);
+        mockGetInstanceResponse(instance1, InstanceState.STOPPED);
 
         // we need to inject some @Values via reflection
         ReflectionTestUtils.setField(dashboardInstanceFactory, "platformApiEndpoint", "http://app.domain.com");
 
         Optional<String> result = dashboardInstanceFactory.getInstance(instance1);
         Assert.assertTrue(result.isPresent());
-        assertThat(createJsonProperty(DashboardInstanceFactory.METADATA_STATE, DashboardInstanceFactory.INSTANCE_STATE_STOPPED), equalTo(result.get()));
+        assertThat(createJsonProperty(DashboardInstanceFactory.METADATA_STATE, InstanceState.STOPPED.name()), equalTo(result.get()));
     }
 
     @Test
@@ -165,10 +165,10 @@ public class DashboardInstanceFactoryTest {
                 .thenReturn(new ResponseEntity<>(HttpStatus.OK));
     }
 
-    private void mockGetInstanceResponse(String instanceId, String expectedState) {
+    private void mockGetInstanceResponse(String instanceId, InstanceState expectedState) {
         when(restTemplate.exchange(eq(GET_SERVICE_INSTANCE_URL), eq(HttpMethod.GET), Mockito.<HttpEntity>any(), Mockito.<Class<String>>any(), anyString(), eq(instanceId)))
                 .thenReturn(new ResponseEntity<>(
-                        createJsonProperty(DashboardInstanceFactory.METADATA_STATE, expectedState),
+                        createJsonProperty(DashboardInstanceFactory.METADATA_STATE, expectedState.name()),
                         HttpStatus.OK));
     }
 

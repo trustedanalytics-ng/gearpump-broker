@@ -15,25 +15,22 @@
  */
 package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
 
-import java.io.IOException;
 import java.util.Optional;
 
 interface ServiceInstanceManager {
 
     String createInstance(String uiInstanceName, String spaceId, String orgId, String username,
-                          String password, String gearpumpMaster, String uaaClientName) throws IOException;
+                          String password, String gearpumpMaster, String uaaClientName) throws DashboardServiceException;
 
     void deleteInstance(String instanceId) throws DashboardServiceException;
 
     boolean stopInstance(String instanceId) throws DashboardServiceException;
 
-    String getInstanceProperty(String instanceData, String propertyName) throws DashboardServiceException;
-
-    String getInstanceState(String instanceData) throws DashboardServiceException;
-
     Optional<String> getInstance(String instanceId) throws DashboardServiceException;
 
-    Optional<Boolean> isInstanceStopped(String instanceId) throws DashboardServiceException;
+    Optional<Boolean> hasInstanceState(String instanceId, InstanceState expectedState) throws DashboardServiceException;
 
-    boolean ensureInstanceIsStopped(String instanceId) throws DashboardServiceException;
+    boolean ensureInstanceStopped(String instanceId) throws DashboardServiceException;
+
+    boolean ensureInstanceRunning(String instanceId) throws DashboardServiceException;
 }

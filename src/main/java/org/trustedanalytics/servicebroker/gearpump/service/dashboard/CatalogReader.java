@@ -1,7 +1,7 @@
 package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
 
 /**
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller;
+import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.JsonUtils;
 
 import java.io.IOException;
-
-import static org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller.CONTENT_TYPE_HEADER;
 
 @Service
 class CatalogReader {
@@ -56,8 +54,7 @@ class CatalogReader {
 
     void readGearpumpDashboardServiceOffering() throws IOException {
         ResponseEntity<String> response = readCatalog();
-
-        JsonNode root = cfCaller.getRoot(response.getBody());
+        JsonNode root = JsonUtils.getRoot(response.getBody());
         for (JsonNode offeringNode : root) {
             if (uiServiceName.equals(offeringNode.get("name").asText())) {
                 uiServiceGuid = offeringNode.get("id").asText();
@@ -70,11 +67,7 @@ class CatalogReader {
 
     private ResponseEntity<String> readCatalog() {
         LOGGER.info("Service catalog reading");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(CONTENT_TYPE_HEADER, "application/json");
-
-        ResponseEntity<String> response = cfCaller.executeWithHeaders(CATALOG_URL, HttpMethod.GET, "", headers, platformApiEndpoint);
+        ResponseEntity<String> response = cfCaller.execute(CATALOG_URL, HttpMethod.GET, "", platformApiEndpoint);
         LOGGER.debug("Response body {}", response.getBody());
         return response;
     }

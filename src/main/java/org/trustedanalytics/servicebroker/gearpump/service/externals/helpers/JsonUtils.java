@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.servicebroker.gearpump.service.dashboard;
+package org.trustedanalytics.servicebroker.gearpump.service.externals.helpers;
 
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public interface DashboardDeployer {
+import java.io.IOException;
 
-    Map<String, String> deployUI(String uiInstanceName, String username, String password, String gearpumpMaster,
-                                 String spaceId, String orgId, String uaaClientName)
-            throws DashboardServiceException;
+public class JsonUtils {
 
-    void undeployUI(String uiServiceInstanceId, String clientId) throws DashboardServiceException;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public static String getValueFromJson(String json, String valuePath) throws IOException {
+        JsonNode root = MAPPER.readTree(json);
+        return root.at(valuePath).asText();
+    }
+
+    public static JsonNode getRoot(String json) throws IOException {
+        return MAPPER.readTree(json);
+    }
 }

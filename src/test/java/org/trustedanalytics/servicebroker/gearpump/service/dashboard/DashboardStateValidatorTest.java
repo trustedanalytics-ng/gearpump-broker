@@ -38,8 +38,8 @@ public class DashboardStateValidatorTest {
 
     @Test
     public void test_validate() throws Exception {
-        Assert.assertEquals(false, validator.validate(() -> Optional.of(false)));
-        Assert.assertEquals(false, validator.validate(Optional::empty));
-        Assert.assertEquals(true, validator.validate(() -> Optional.of(true)));
+        Assert.assertEquals(false, validator.validate((instanceId, expectedState) -> Optional.of(false), "", InstanceState.STOPPED));
+        Assert.assertEquals(false, validator.validate((instanceId, expectedState) -> Optional.empty(), "", InstanceState.STOPPED));
+        Assert.assertEquals(true, validator.validate((instanceId, expectedState) -> Optional.of(true), "", InstanceState.RUNNING));
     }
 }

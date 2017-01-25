@@ -29,24 +29,27 @@ class DashboardStateValidator {
 
     @FunctionalInterface
     interface StateValiditySupplier {
-        Optional<Boolean> validate() throws DashboardServiceException;
+        Optional<Boolean> validate(String instanceId, InstanceState expectedState) throws DashboardServiceException;
     }
 
-    @Value("${gearpump.dashboard.stopValidator.maxRetryCount}")
+    @Value("${gearpump.dashboard.stateValidator.maxRetryCount}")
     private int maxRetryCount;
 
-    @Value("${gearpump.dashboard.stopValidator.retryInterval}")
+    @Value("${gearpump.dashboard.stateValidator.retryInterval}")
     private long retryInterval;
 
-    @Value("${gearpump.dashboard.stopValidator.retryEnabled:false}")
+    @Value("${gearpump.dashboard.stateValidator.retryEnabled:false}")
     private boolean retryEnabled;
 
-    boolean validate(StateValiditySupplier validator) throws DashboardServiceException {
+    boolean validate(StateValiditySupplier validator, String instanceId, InstanceState expectedState) throws DashboardServiceException {
+        LOGGER.info("Ensuring if a Gearpump dashboard is in state: {}", expectedState);
+
         Optional<Boolean> result;
         int retryCount = 0;
 
         while (true) {
-            result = validator.validate();
+            result = validator.validate(instanceId, expectedState);
+            LOGGER.info("The Gearpump dashboard has state {}? {}", expectedState, result);
 
             if (!result.isPresent() || result.get().equals(true) || !retryEnabled || retryCount >= maxRetryCount) {
                 break;

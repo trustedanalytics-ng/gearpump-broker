@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.trustedanalytics.servicebroker.gearpump.config.CatalogConfig;
 import org.trustedanalytics.servicebroker.gearpump.kerberos.KerberosService;
 import org.trustedanalytics.servicebroker.gearpump.model.GearPumpCredentials;
-import org.trustedanalytics.servicebroker.gearpump.service.dashboard.CloudFoundryServiceException;
 import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardDeployer;
+import org.trustedanalytics.servicebroker.gearpump.service.dashboard.DashboardServiceException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.ExternalProcessException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.GearPumpDriverExec;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.SpawnResult;
@@ -140,12 +140,12 @@ public class GearPumpServiceSpawnerTest {
         when(gearPumpDriver.spawnGearPumpOnYarn(numberOfWorkers)).thenReturn(spawnResult);
 
         when(dashboardDeployer.deployUI(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenThrow(new CloudFoundryServiceException(""));
+                .thenThrow(new DashboardServiceException(""));
 
         try {
             gearPumpSpawner.provisionInstance("serviceInstanceId", "spaceId", "orgId", planId);
         } catch (Exception ex) {
-            assertThat(ex.getClass(), equalTo(CloudFoundryServiceException.class));
+            assertThat(ex.getClass(), equalTo(DashboardServiceException.class));
             verify(yarnAppManager).killApplication(gearPumpCredentials.getYarnApplicationId());
         }
     }

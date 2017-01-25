@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.CfCaller;
+import org.trustedanalytics.servicebroker.gearpump.service.externals.helpers.JsonUtils;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -79,7 +80,7 @@ class UaaConnector {
         headers.add(CONTENT_TYPE_HEADER, "application/x-www-form-urlencoded");
 
         ResponseEntity<String> response = cfCaller.executeWithHeaders(CREATE_UAA_TOKEN_URL, HttpMethod.POST, CREATE_UAA_TOKEN_BODY_TEMPLATE, headers, uaaTokenApiEndpoint);
-        return extractToken(cfCaller, response);
+        return extractToken(response);
     }
 
     /**
@@ -131,10 +132,10 @@ class UaaConnector {
         return null;
     }
 
-    private String extractToken(CfCaller cfCaller, ResponseEntity<String> response) throws DashboardServiceException {
+    private String extractToken(ResponseEntity<String> response) throws DashboardServiceException {
         try {
-            return cfCaller.getValueFromJson(response.getBody(), UAA_TOKEN_TYPE)
-                    + " " + cfCaller.getValueFromJson(response.getBody(), UAA_ACCESS_TOKEN);
+            return JsonUtils.getValueFromJson(response.getBody(), UAA_TOKEN_TYPE)
+                    + " " + JsonUtils.getValueFromJson(response.getBody(), UAA_ACCESS_TOKEN);
         } catch (IOException e) {
             throw new DashboardServiceException("Cannot obtain UAA token.", e);
         }

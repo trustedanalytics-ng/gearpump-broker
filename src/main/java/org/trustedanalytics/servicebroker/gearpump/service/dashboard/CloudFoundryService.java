@@ -55,7 +55,7 @@ public class CloudFoundryService implements DashboardDeployer {
     @Override
     public Map<String, String> deployUI(String uiInstanceName, String username, String password, String gearpumpMaster,
                                         String spaceId, String orgId, String uaaClientName)
-            throws DashboardServiceException, CloudFoundryServiceException {
+            throws DashboardServiceException {
 
         LOGGER.info("Deploying GearPump dashboard: uiInstanceName={}", uiInstanceName);
 
@@ -65,10 +65,10 @@ public class CloudFoundryService implements DashboardDeployer {
         String uaaToken = uaaConnector.createUaaToken(ssoAdminClientId, ssoAdminClientSecret);
         uaaConnector.createUaaClient(uaaClientName, password, uiAppUrl, uaaToken);
 
-        try {
-            uiServiceInstanceGuid = dashboardFactory.createInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
-        } catch (IOException e) {
-            throw new CloudFoundryServiceException("Cannot create UI instance.", e);
+        uiServiceInstanceGuid = dashboardFactory.createInstance(uiInstanceName, spaceId, orgId, username, password, gearpumpMaster, uaaClientName);
+
+        if (!dashboardFactory.ensureInstanceRunning(uiServiceInstanceGuid)) {
+            throw new DashboardServiceException("UI instance seems still not running.");
         }
 
         Map<String, String> dashboardData = new HashMap<>();
@@ -103,7 +103,7 @@ public class CloudFoundryService implements DashboardDeployer {
         LOGGER.info("Undeploying GearPump dashboard: uiServiceInstanceId={}", uiServiceInstanceId);
 
         if (dashboardFactory.stopInstance(uiServiceInstanceId)
-                && dashboardFactory.ensureInstanceIsStopped(uiServiceInstanceId)) {
+                && dashboardFactory.ensureInstanceStopped(uiServiceInstanceId)) {
 
             dashboardFactory.deleteInstance(uiServiceInstanceId);
         }
