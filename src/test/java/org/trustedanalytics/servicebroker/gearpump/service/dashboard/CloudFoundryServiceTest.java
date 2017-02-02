@@ -53,7 +53,7 @@ public class CloudFoundryServiceTest {
         when(dashboardFactory.createInstance(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn("my_guid");
         when(dashboardFactory.ensureInstanceRunning(anyString())).thenReturn(true);
 
-        ReflectionTestUtils.setField(dashboardDeployer, "cfApiEndpoint", "http://api.domain.com");
+        ReflectionTestUtils.setField(dashboardDeployer, "platformApiEndpoint", "http://api.domain.com");
 
         Map<String, String> dashboardData = dashboardDeployer.deployUI("uiInstanceName", "username", "password", "gearpumpMaster",
                 "spaceId", "orgId", "uaaClientName");

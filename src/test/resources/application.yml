@@ -56,8 +56,6 @@ yarn:
     dir: ${HADOOP_CONF_DIR:/etc/hadoop}
     override: false
 
-api.endpoint: ${vcap.services.sso.credentials.apiEndpoint:}
-
 uaa:
   endpoint: ${vcap.services.sso.credentials.uaaUri:}
   token_uri: ${vcap.services.sso.credentials.tokenUri:}

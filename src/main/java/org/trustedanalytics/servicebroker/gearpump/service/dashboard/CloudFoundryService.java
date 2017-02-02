@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -37,8 +36,8 @@ public class CloudFoundryService implements DashboardDeployer {
     private final UaaConnector uaaConnector;
     private final ServiceInstanceManager dashboardFactory;
 
-    @Value("${api.endpoint}")
-    private String cfApiEndpoint;
+    @Value("${tap.api.endpoint}")
+    private String platformApiEndpoint;
 
     @Value("${uaa.admin_client.id}")
     private String ssoAdminClientId;
@@ -84,7 +83,7 @@ public class CloudFoundryService implements DashboardDeployer {
     private String getTapEndpointDomain() throws DashboardServiceException {
         String domain;
         try {
-            URL url = new URL(cfApiEndpoint);
+            URL url = new URL(platformApiEndpoint);
             domain = url.getHost();
             LOGGER.debug("Extracted domain: {}", domain);
             domain = domain.replaceFirst("([a-zA-Z0-9-]*\\.)", "");
