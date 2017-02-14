@@ -40,4 +40,4 @@ echo "Copy ${YARN_CONF_DIR}/* to ./${GEARPUMP_NAME}/conf/yarnconf"
 cp -RL ${YARN_CONF_DIR}/* ./${GEARPUMP_NAME}/conf/yarnconf
 
 echo "Done! Run broker..."
-exec java -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar
+exec java ${JAVA_OPTS} -jar gearpump-broker-${GEARPUMP_BROKER_VERSION}.jar
